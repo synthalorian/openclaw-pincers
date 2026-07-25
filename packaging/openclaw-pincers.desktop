@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=OpenClaw Pincers
+GenericName=OpenClaw Desktop Client
+Comment=Get a grip on your gateway — desktop control center for OpenClaw
+Exec=openclaw-pincers
+Icon=openclaw-pincers
+Terminal=false
+Categories=Development;Utility;Network;
+Keywords=openclaw;ai;gateway;agent;claw;
+StartupNotify=true
+StartupWMClass=openclaw-desktop
