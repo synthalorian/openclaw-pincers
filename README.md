@@ -20,17 +20,38 @@ leaves the native process.
 - [ ] Schema-driven config editor (`config.schema` + `config.patch`) — the v1.1 killer feature
 - [ ] Cron manager, logs tail, embedded terminal, node pairing UI
 
-## Develop
+## Install
 
-Prereqs: Rust toolchain, Node 18+, Tauri system deps
-(`webkit2gtk-4.1`, `libsoup-3.0`, `gtk+3` on Linux).
+### Linux
+- **Debian/Ubuntu:** `sudo dpkg -i "OpenClaw Pincers"_*_amd64.deb`
+- **Fedora/openSUSE:** `sudo dnf install OpenClaw\ Pincers-*.x86_64.rpm`
+- **Any distro:** the `.AppImage` — `chmod +x` and run
+- **Arch/CachyOS/Manjaro:** `cd packaging && makepkg -si`
+
+Requires `webkit2gtk-4.1`, `gtk3`, `libsoup3` (preinstalled on most desktops).
+
+### macOS
+Download the `.dmg` for your chip (arm64 = Apple Silicon, x64 = Intel),
+drag to Applications. Unsigned build: first launch may need
+`xattr -dr com.apple.quarantine "/Applications/OpenClaw Pincers.app"`.
+
+### Windows
+Download the `.msi` (or NSIS `.exe`) and install. Unsigned build:
+click “More info → Run anyway” on the SmartScreen prompt.
+
+### Build from source (any platform)
+Prereqs: Rust toolchain, Node 18+, [Tauri system deps](https://v2.tauri.app/start/prerequisites/).
 
 ```bash
 npm install
 npm run tauri dev      # dev build with hot reload
-npm run tauri build    # release bundles
+npm run tauri build    # release bundles (deb/rpm/AppImage/dmg/msi per host OS)
 npm run check          # svelte-check types
 ```
+
+Releases are built by GitHub Actions (`.github/workflows/release.yml`) —
+tag `v*` and the pipeline ships Linux (deb/rpm/AppImage), macOS (arm64+x64 dmg),
+and Windows (msi/nsis) artifacts.
 
 ## Architecture
 

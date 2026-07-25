@@ -89,12 +89,19 @@ struct LocalGatewayAuth {
     token: String,
 }
 
+fn home_dir() -> Option<PathBuf> {
+    // $HOME on unix, %USERPROFILE% on Windows.
+    std::env::var_os("HOME")
+        .or_else(|| std::env::var_os("USERPROFILE"))
+        .map(PathBuf::from)
+}
+
 /// Reads the local OpenClaw config (~/.openclaw/openclaw.json) and returns the
 /// loopback gateway URL + auth token when configured. Convenience for
 /// first-run onboarding; nothing is written and the token stays on-device.
 #[tauri::command]
 fn local_gateway_auth() -> Result<Option<LocalGatewayAuth>, String> {
-    let home = std::env::var_os("HOME").ok_or("HOME not set")?;
+    let home = home_dir().ok_or("home directory not found")?;
     let path = PathBuf::from(home).join(".openclaw").join("openclaw.json");
     if !path.exists() {
         return Ok(None);
