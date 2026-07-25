@@ -33,9 +33,10 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "description": "Desktop control center for OpenClaw gateways — chat, config, cron, approvals, logs, updates",
     "publisher": "OpenClaw Community",
     "copyright": "MIT © 2026 OpenClaw Community",
-    "category": "DeveloperTool"
+    "category": "DeveloperTool",
+    "shortDescription": "Desktop control center for OpenClaw gateways",
+    "longDescription": "OpenClaw Pincers — chat, config, cron, approvals, logs, files, models, and updates for any OpenClaw gateway."
   }
 }
