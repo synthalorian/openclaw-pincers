@@ -82,7 +82,21 @@ class AppState {
       await this.refreshSessions();
       await this.loadHistory();
     } catch (err) {
-      this.connectError = err instanceof Error ? err.message : String(err);
+      this.connectError = friendlyConnectError(err);
+    }
+  }
+
+  /** Pull URL + token from the local OpenClaw config via the Rust backend. */
+  async detectLocalGateway(): Promise<boolean> {
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      const found = await invoke<{ url: string; token: string } | null>("local_gateway_auth");
+      if (!found) return false;
+      this.gatewayUrl = found.url;
+      this.token = found.token;
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -155,6 +169,21 @@ class AppState {
       this.chatError = err instanceof Error ? err.message : String(err);
     }
   }
+}
+
+function friendlyConnectError(err: unknown): string {
+  const e = err as { code?: string; message?: string };
+  const msg = e?.message ?? String(err);
+  if (e?.code === "AUTH_TOKEN_MISSING" || msg.includes("token missing")) {
+    return "This gateway requires an auth token. Hit “Detect local gateway” or paste the token from ~/.openclaw/openclaw.json (gateway.auth.token).";
+  }
+  if (e?.code === "NOT_PAIRED" || msg.includes("pairing")) {
+    return "This device needs pairing approval. Approve it with: openclaw devices approve";
+  }
+  if (msg.includes("WebSocket error") || msg.includes("closed during handshake")) {
+    return "Can't reach the gateway at that URL. Is OpenClaw running? (openclaw gateway status)";
+  }
+  return msg;
 }
 
 function extractFinalText(message: unknown): string {
