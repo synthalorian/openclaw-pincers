@@ -74,15 +74,15 @@
 </Section>
 
 <style>
-  .notice { background: rgba(63, 221, 140, 0.1); border: 1px solid #2a7a52; color: #7fe6b0; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+  .notice { background: rgba(63, 221, 140, 0.1); border: 1px solid var(--success-border); color: var(--success-text); border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
   .list { display: flex; flex-direction: column; gap: 12px; }
-  .card { background: #11141d; border: 1px solid #6e5b1f; border-radius: 12px; padding: 16px; }
-  .cmd { font-size: 13px; color: #ffcf6e; word-break: break-all; }
+  .card { background: var(--bg-card); border: 1px solid var(--warning-border); border-radius: 12px; padding: 16px; }
+  .cmd { font-size: 13px; color: var(--warning); word-break: break-all; }
   .mono { font-family: "JetBrains Mono", monospace; }
-  details { margin-top: 10px; font-size: 12px; color: #5b6478; }
+  details { margin-top: 10px; font-size: 12px; color: var(--muted); }
   summary { cursor: pointer; }
   .ops { display: flex; gap: 10px; margin-top: 14px; }
-  .allow { background: rgba(63, 221, 140, 0.12); border: 1px solid #2a7a52; color: #7fe6b0; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .deny { background: rgba(179, 54, 74, 0.12); border: 1px solid #b3364a; color: #ff9aa8; border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .empty { color: #5b6478; padding: 40px; text-align: center; font-size: 14px; }
+  .allow { background: rgba(63, 221, 140, 0.12); border: 1px solid var(--success-border); color: var(--success-text); border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .deny { background: rgba(179, 54, 74, 0.12); border: 1px solid var(--danger); color: var(--danger-text); border-radius: 8px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .empty { color: var(--muted); padding: 40px; text-align: center; font-size: 14px; }
 </style>

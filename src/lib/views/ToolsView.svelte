@@ -69,15 +69,15 @@
 </Section>
 
 <style>
-  .filter { background: #0b0e14; border: 1px solid #2a3350; border-radius: 8px; color: #e6ebf5; padding: 8px 10px; font-size: 13px; outline: none; }
-  .filter:focus { border-color: #ff3fa4; }
+  .filter { background: var(--bg); border: 1px solid var(--border-input); border-radius: 8px; color: var(--text); padding: 8px 10px; font-size: 13px; outline: none; }
+  .filter:focus { border-color: var(--accent); }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 8px 10px; color: #5b6478; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #1d2333; }
-  td { padding: 8px 10px; border-bottom: 1px solid #151a28; vertical-align: top; }
-  tr:hover td { background: #11141d; }
-  .mono { font-family: "JetBrains Mono", monospace; color: #a8e6c8; }
-  .dim { color: #5b6478; font-size: 11px; }
-  .desc { color: #9aa4bc; font-size: 12px; }
-  .count { margin-top: 10px; font-size: 11px; color: #5b6478; }
-  .empty { color: #5b6478; padding: 20px; }
+  th { text-align: left; padding: 8px 10px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--bg-msg); vertical-align: top; }
+  tr:hover td { background: var(--bg-card); }
+  .mono { font-family: "JetBrains Mono", monospace; color: var(--mono); }
+  .dim { color: var(--muted); font-size: 11px; }
+  .desc { color: var(--text3); font-size: 12px; }
+  .count { margin-top: 10px; font-size: 11px; color: var(--muted); }
+  .empty { color: var(--muted); padding: 20px; }
 </style>

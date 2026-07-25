@@ -75,17 +75,17 @@
 
 <style>
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
-  .card { background: #11141d; border: 1px solid #232a3d; border-radius: 12px; padding: 18px; }
+  .card { background: var(--bg-card); border: 1px solid var(--border2); border-radius: 12px; padding: 18px; }
   .card.wide { grid-column: 1 / -1; }
-  .card.hero { background: linear-gradient(135deg, #1a1030, #11141d); border-color: #7b5bff; }
+  .card.hero { background: linear-gradient(135deg, var(--bg-active), var(--bg-card)); border-color: var(--accent2); }
   .lobster { font-size: 40px; filter: drop-shadow(0 0 14px rgba(255, 63, 164, 0.7)); }
   .card.hero h3 { margin: 8px 0; font-size: 18px; }
-  .card.hero p { font-size: 13px; color: #9aa4bc; line-height: 1.6; }
-  .card.hero code { color: #a8e6c8; font-size: 11px; }
-  .card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #5b6478; margin-bottom: 10px; }
-  .sub { font-size: 12px; color: #7c86a0; }
+  .card.hero p { font-size: 13px; color: var(--text3); line-height: 1.6; }
+  .card.hero code { color: var(--mono); font-size: 11px; }
+  .card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+  .sub { font-size: 12px; color: var(--text5); }
   .ops { display: flex; gap: 10px; margin-top: 10px; }
-  .primary { background: linear-gradient(135deg, #ff3fa4, #7b5bff); color: white; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .ghost { background: #1c2337; color: #8fa0c8; border: 1px solid #2a3350; border-radius: 8px; padding: 9px 14px; font-size: 12px; cursor: pointer; }
-  .ghost:hover { color: #ff3fa4; border-color: #ff3fa4; }
+  .primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .ghost { background: var(--bg-active); color: var(--text4); border: 1px solid var(--border-input); border-radius: 8px; padding: 9px 14px; font-size: 12px; cursor: pointer; }
+  .ghost:hover { color: var(--accent); border-color: var(--accent); }
 </style>

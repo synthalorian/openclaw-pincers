@@ -64,13 +64,13 @@
 </Section>
 
 <style>
-  .follow { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #8fa0c8; }
+  .follow { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text4); }
   .log {
-    background: #0b0e14; border: 1px solid #1d2333; border-radius: 10px;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
     padding: 12px; height: 65vh; overflow-y: auto;
     font-family: "JetBrains Mono", monospace; font-size: 11.5px; line-height: 1.5;
   }
-  .line { color: #9aa4bc; white-space: pre-wrap; word-break: break-all; }
-  .line:hover { background: #11141d; }
-  .empty { color: #5b6478; padding: 20px; }
+  .line { color: var(--text3); white-space: pre-wrap; word-break: break-all; }
+  .line:hover { background: var(--bg-card); }
+  .empty { color: var(--muted); padding: 20px; }
 </style>

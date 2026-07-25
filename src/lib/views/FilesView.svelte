@@ -106,20 +106,20 @@
 </Section>
 
 <style>
-  select { background: #0b0e14; border: 1px solid #2a3350; border-radius: 8px; color: #e6ebf5; padding: 8px 10px; font-size: 13px; outline: none; }
+  select { background: var(--bg); border: 1px solid var(--border-input); border-radius: 8px; color: var(--text); padding: 8px 10px; font-size: 13px; outline: none; }
   .crumbs, .file-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-  .crumbs code, .file-head code { color: #8fa0c8; font-size: 12px; }
+  .crumbs code, .file-head code { color: var(--text4); font-size: 12px; }
   .list { display: flex; flex-direction: column; gap: 2px; }
   .row {
     display: flex; align-items: center; gap: 10px; padding: 8px 10px;
-    background: transparent; border: none; border-radius: 8px; color: #b8c0d4;
+    background: transparent; border: none; border-radius: 8px; color: var(--text2);
     font-size: 13px; cursor: pointer; text-align: left;
   }
-  .row:hover { background: #161b28; }
+  .row:hover { background: var(--bg-hover); }
   .name { flex: 1; font-family: "JetBrains Mono", monospace; }
-  .size { color: #5b6478; font-size: 11px; }
-  .empty { color: #5b6478; padding: 20px; }
-  .ghost { background: #1c2337; color: #8fa0c8; border: 1px solid #2a3350; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
-  .ghost:hover:not(:disabled) { color: #ff3fa4; border-color: #ff3fa4; }
+  .size { color: var(--muted); font-size: 11px; }
+  .empty { color: var(--muted); padding: 20px; }
+  .ghost { background: var(--bg-active); color: var(--text4); border: 1px solid var(--border-input); border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+  .ghost:hover:not(:disabled) { color: var(--accent); border-color: var(--accent); }
   .ghost:disabled { opacity: 0.4; }
 </style>

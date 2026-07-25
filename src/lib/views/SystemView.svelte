@@ -64,11 +64,11 @@
 
 <style>
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
-  .card { background: #11141d; border: 1px solid #232a3d; border-radius: 12px; padding: 16px; }
+  .card { background: var(--bg-card); border: 1px solid var(--border2); border-radius: 12px; padding: 16px; }
   .card.wide { grid-column: 1 / -1; }
-  .card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #5b6478; margin-bottom: 10px; }
-  .sub { font-size: 12px; color: #7c86a0; }
-  .note { margin-top: 10px; font-size: 13px; color: #ffcf6e; }
-  .primary { background: linear-gradient(135deg, #ff3fa4, #7b5bff); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+  .sub { font-size: 12px; color: var(--text5); }
+  .note { margin-top: 10px; font-size: 13px; color: var(--warning); }
+  .primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
   .primary:disabled { opacity: 0.4; cursor: default; }
 </style>

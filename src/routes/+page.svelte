@@ -12,6 +12,9 @@
   import LogsView from "$lib/views/LogsView.svelte";
   import SystemView from "$lib/views/SystemView.svelte";
   import OnboardingView from "$lib/views/OnboardingView.svelte";
+  import ThemePicker from "$lib/components/ThemePicker.svelte";
+
+  let themePickerOpen = $state(false);
 
   const connected = $derived(app.status === "connected");
 
@@ -95,6 +98,9 @@
       </div>
 
       <div class="rail-footer">
+        <button class="rail-item" title="Themes" onclick={() => (themePickerOpen = !themePickerOpen)}>
+          <span class="rail-icon">🎨</span>
+        </button>
         <div class="conn-dot"></div>
         <div class="conn-info">
           <small>v{app.hello?.server.version ?? "?"}</small>
@@ -105,6 +111,7 @@
       </div>
     </nav>
 
+    <ThemePicker bind:open={themePickerOpen} />
     <ActiveView />
   </main>
 {/if}
@@ -114,8 +121,8 @@
   :global(body) {
     margin: 0;
     font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-    background: #0b0e14;
-    color: #d7dce6;
+    background: var(--bg);
+    color: var(--text);
     height: 100vh;
     overflow: hidden;
   }
@@ -125,14 +132,14 @@
     height: 100vh;
     display: grid;
     place-items: center;
-    background: radial-gradient(ellipse at 30% 20%, #141b2e 0%, #0b0e14 60%);
+    background: radial-gradient(ellipse at 30% 20%, var(--bg-card) 0%, var(--bg) 60%);
   }
   .connect-card {
     width: 400px;
     padding: 32px;
     border-radius: 14px;
-    background: #11141d;
-    border: 1px solid #232a3d;
+    background: var(--bg-card);
+    border: 1px solid var(--border2);
     box-shadow: 0 0 60px rgba(255, 63, 164, 0.08), 0 20px 50px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
@@ -140,55 +147,55 @@
   }
   .claw-mark { font-size: 44px; text-align: center; filter: drop-shadow(0 0 16px rgba(255, 63, 164, 0.7)); }
   .brand { margin: 0; font-size: 26px; letter-spacing: 0.5px; text-align: center; }
-  .brand span { color: #ff3fa4; }
-  .tagline { margin: 0 0 8px; color: #7c86a0; font-size: 13px; text-align: center; }
-  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #9aa4bc; }
-  .hint { color: #5b6478; font-size: 11px; }
+  .brand span { color: var(--accent); }
+  .tagline { margin: 0 0 8px; color: var(--text5); font-size: 13px; text-align: center; }
+  label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text3); }
+  .hint { color: var(--muted); font-size: 11px; }
   input {
-    background: #0b0e14;
-    border: 1px solid #2a3350;
+    background: var(--bg);
+    border: 1px solid var(--border-input);
     border-radius: 8px;
-    color: #e6ebf5;
+    color: var(--text);
     padding: 10px 12px;
     font-size: 14px;
     outline: none;
   }
-  input:focus { border-color: #ff3fa4; }
+  input:focus { border-color: var(--accent); }
   button { border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer; }
   button:disabled { opacity: 0.4; cursor: default; }
-  .primary { background: linear-gradient(135deg, #ff3fa4, #7b5bff); color: white; }
-  .detect { align-self: flex-start; font-size: 12px; color: #8fa0c8; border: 1px dashed #2a3350; border-radius: 8px; padding: 7px 10px; background: transparent; }
-  .detect:hover { color: #ff3fa4; border-color: #ff3fa4; }
+  .primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; }
+  .detect { align-self: flex-start; font-size: 12px; color: var(--text4); border: 1px dashed var(--border-input); border-radius: 8px; padding: 7px 10px; background: transparent; }
+  .detect:hover { color: var(--accent); border-color: var(--accent); }
   .error {
     background: rgba(179, 54, 74, 0.15);
-    border: 1px solid #b3364a;
+    border: 1px solid var(--danger);
     border-radius: 8px;
     padding: 10px 12px;
     font-size: 13px;
-    color: #ff9aa8;
+    color: var(--danger-text);
   }
   .pairing {
     background: rgba(255, 207, 110, 0.08);
-    border: 1px solid #6e5b1f;
+    border: 1px solid var(--warning-border);
     border-radius: 10px;
     padding: 12px 14px;
     font-size: 12.5px;
-    color: #e8d9b0;
+    color: var(--warning-text);
   }
-  .pairing-title { font-weight: 700; color: #ffcf6e; margin-bottom: 6px; }
-  .pairing p { margin: 6px 0; color: #b8ab8a; line-height: 1.5; }
+  .pairing-title { font-weight: 700; color: var(--warning); margin-bottom: 6px; }
+  .pairing p { margin: 6px 0; color: var(--text4); line-height: 1.5; }
   .pairing code {
-    display: block; background: #0b0e14; border: 1px solid #2a3350; border-radius: 6px;
-    padding: 8px 10px; margin: 8px 0; font-size: 11.5px; color: #ffcf6e; word-break: break-all;
+    display: block; background: var(--bg); border: 1px solid var(--border-input); border-radius: 6px;
+    padding: 8px 10px; margin: 8px 0; font-size: 11.5px; color: var(--warning); word-break: break-all;
   }
-  .pairing .retrying { color: #7c86a0; font-size: 11px; font-style: italic; }
+  .pairing .retrying { color: var(--text5); font-size: 11px; font-style: italic; }
 
   /* ---------- Shell ---------- */
   .shell { display: flex; height: 100vh; }
   .rail {
     width: 86px;
-    background: #0e1119;
-    border-right: 1px solid #1d2333;
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -196,24 +203,24 @@
   }
   .rail-brand {
     display: flex; flex-direction: column; align-items: center; gap: 2px;
-    padding: 14px 0 10px; border-bottom: 1px solid #1d2333; width: 100%;
+    padding: 14px 0 10px; border-bottom: 1px solid var(--border); width: 100%;
   }
   .rail-claw { font-size: 24px; filter: drop-shadow(0 0 8px rgba(255, 63, 164, 0.6)); }
-  .rail-name { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #ff3fa4; text-transform: uppercase; }
+  .rail-name { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--accent); text-transform: uppercase; }
   .rail-items { flex: 1; overflow-y: auto; width: 100%; padding: 8px 6px; display: flex; flex-direction: column; gap: 2px; }
   .rail-item {
     display: flex; flex-direction: column; align-items: center; gap: 3px;
-    background: transparent; color: #7c86a0; padding: 8px 2px; border-radius: 10px;
+    background: transparent; color: var(--text5); padding: 8px 2px; border-radius: 10px;
     font-weight: 500; width: 100%;
   }
-  .rail-item:hover { background: #161b28; color: #d7dce6; }
-  .rail-item.active { background: #1c2337; color: #fff; box-shadow: inset 0 0 0 1px #2a3350, inset 2px 0 0 #ff3fa4; }
+  .rail-item:hover { background: var(--bg-hover); color: var(--text); }
+  .rail-item.active { background: var(--bg-active); color: #fff; box-shadow: inset 0 0 0 1px var(--border-input), inset 2px 0 0 var(--accent); }
   .rail-icon { font-size: 17px; }
   .rail-label { font-size: 9px; letter-spacing: 0.3px; }
   .rail-footer {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
-    padding: 10px 0; border-top: 1px solid #1d2333; width: 100%;
+    padding: 10px 0; border-top: 1px solid var(--border); width: 100%;
   }
-  .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: #3fdd8c; box-shadow: 0 0 8px #3fdd8c; }
-  .conn-info small { color: #5b6478; font-size: 9px; }
+  .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
+  .conn-info small { color: var(--muted); font-size: 9px; }
 </style>

@@ -130,23 +130,23 @@
 </Section>
 
 <style>
-  .notice { background: rgba(63, 221, 140, 0.1); border: 1px solid #2a7a52; color: #7fe6b0; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
-  .add-form { display: flex; flex-direction: column; gap: 8px; background: #11141d; border: 1px solid #232a3d; border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+  .notice { background: rgba(63, 221, 140, 0.1); border: 1px solid var(--success-border); color: var(--success-text); border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px; }
+  .add-form { display: flex; flex-direction: column; gap: 8px; background: var(--bg-card); border: 1px solid var(--border2); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
   .add-form input, .add-form textarea {
-    background: #0b0e14; border: 1px solid #2a3350; border-radius: 8px; color: #e6ebf5;
+    background: var(--bg); border: 1px solid var(--border-input); border-radius: 8px; color: var(--text);
     padding: 9px 12px; font-size: 13px; outline: none; font-family: inherit;
   }
-  .add-form input:focus, .add-form textarea:focus { border-color: #ff3fa4; }
+  .add-form input:focus, .add-form textarea:focus { border-color: var(--accent); }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 8px 10px; color: #5b6478; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #1d2333; }
-  td { padding: 8px 10px; border-bottom: 1px solid #151a28; }
-  .mono { font-family: "JetBrains Mono", monospace; color: #8fa0c8; font-size: 12px; }
-  .pill { border: 1px solid #2a3350; background: #1c2337; color: #7c86a0; border-radius: 20px; padding: 3px 12px; font-size: 11px; cursor: pointer; }
-  .pill.on { border-color: #2a7a52; color: #7fe6b0; background: rgba(63, 221, 140, 0.08); }
+  th { text-align: left; padding: 8px 10px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--bg-msg); }
+  .mono { font-family: "JetBrains Mono", monospace; color: var(--text4); font-size: 12px; }
+  .pill { border: 1px solid var(--border-input); background: var(--bg-active); color: var(--text5); border-radius: 20px; padding: 3px 12px; font-size: 11px; cursor: pointer; }
+  .pill.on { border-color: var(--success-border); color: var(--success-text); background: rgba(63, 221, 140, 0.08); }
   .ops { text-align: right; white-space: nowrap; }
-  .ghost { background: transparent; color: #8fa0c8; border: 1px solid #2a3350; border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; margin-left: 6px; }
-  .ghost:hover { color: #ff3fa4; border-color: #ff3fa4; }
-  .ghost.danger:hover { color: #ff9aa8; border-color: #b3364a; }
-  .primary { background: linear-gradient(135deg, #ff3fa4, #7b5bff); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
-  .empty { color: #5b6478; padding: 20px; text-align: center; }
+  .ghost { background: transparent; color: var(--text4); border: 1px solid var(--border-input); border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; margin-left: 6px; }
+  .ghost:hover { color: var(--accent); border-color: var(--accent); }
+  .ghost.danger:hover { color: var(--danger-text); border-color: var(--danger); }
+  .primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .empty { color: var(--muted); padding: 20px; text-align: center; }
 </style>

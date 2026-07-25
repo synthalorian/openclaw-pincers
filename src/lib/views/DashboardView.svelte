@@ -62,10 +62,10 @@
 
 <style>
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
-  .card { background: #11141d; border: 1px solid #232a3d; border-radius: 12px; padding: 16px; }
+  .card { background: var(--bg-card); border: 1px solid var(--border2); border-radius: 12px; padding: 16px; }
   .card.wide { grid-column: 1 / -1; }
-  .card.hero { background: linear-gradient(135deg, #1a1030, #11141d); border-color: #7b5bff; }
-  .card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #5b6478; margin-bottom: 10px; }
-  .big { font-size: 28px; font-weight: 700; color: #ff3fa4; }
-  .sub { font-size: 12px; color: #7c86a0; margin-top: 4px; word-break: break-all; }
+  .card.hero { background: linear-gradient(135deg, var(--bg-active), var(--bg-card)); border-color: var(--accent2); }
+  .card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+  .big { font-size: 28px; font-weight: 700; color: var(--accent); }
+  .sub { font-size: 12px; color: var(--text5); margin-top: 4px; word-break: break-all; }
 </style>

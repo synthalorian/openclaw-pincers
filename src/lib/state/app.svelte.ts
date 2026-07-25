@@ -4,10 +4,12 @@
 
 import { GatewayClient, isChatEvent, type ConnectionStatus } from "$lib/gateway/client";
 import type { ChatMessage, HelloOk, SessionRow } from "$lib/gateway/protocol";
+import { THEMES, type ThemeDef } from "$lib/themes";
 
 const LS_URL = "ocd.gatewayUrl";
 const LS_TOKEN = "ocd.token";
 const LS_SESSION = "ocd.sessionKey";
+const LS_THEME = "ocd.theme";
 
 export type Section =
   | "chat"
@@ -56,6 +58,17 @@ class AppState {
   private pairingTimer: ReturnType<typeof setInterval> | null = null;
   section = $state<Section>("chat");
   agents = $state<{ agentId: string; [k: string]: unknown }[]>([]);
+  themeId = $state(localStorage.getItem(LS_THEME) ?? "grid");
+
+  get theme(): ThemeDef {
+    return THEMES.find((t) => t.id === this.themeId) ?? THEMES[0];
+  }
+
+  setTheme(id: string) {
+    this.themeId = id;
+    localStorage.setItem(LS_THEME, id);
+    applyTheme(this.theme);
+  }
 
   gatewayUrl = $state(localStorage.getItem(LS_URL) ?? "ws://127.0.0.1:18789");
   token = $state(localStorage.getItem(LS_TOKEN) ?? "");
@@ -73,6 +86,7 @@ class AppState {
   constructor() {
     this.client.onStatus((s) => (this.status = s));
     this.client.onEvent((event, payload) => this.handleEvent(event, payload));
+    applyTheme(this.theme);
   }
 
   private handleEvent(event: string, payload: unknown) {
@@ -306,6 +320,15 @@ function extractFinalText(message: unknown): string {
       .join("");
   }
   return "";
+}
+
+export function applyTheme(theme: ThemeDef) {
+  // Reset to :root defaults, then overlay theme vars.
+  const style = document.documentElement.style;
+  for (const key of Object.keys(THEMES[1].vars)) style.removeProperty(key);
+  for (const [k, v] of Object.entries(theme.vars)) style.setProperty(k, v);
+  document.documentElement.dataset.theme = theme.id;
+  document.documentElement.style.colorScheme = theme.dark ? "dark" : "light";
 }
 
 export const app = new AppState();
