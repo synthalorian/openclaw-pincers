@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "OpenClaw Desktop",
+  "productName": "OpenClaw Pincers",
   "version": "0.1.0",
-  "identifier": "ai.openclaw.desktop",
+  "identifier": "ai.openclaw.pincers",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "OpenClaw Desktop",
+        "title": "OpenClaw Pincers 🦞",
         "width": 1280,
         "height": 840,
         "minWidth": 900,

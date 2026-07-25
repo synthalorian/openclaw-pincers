@@ -1,46 +1,44 @@
 <script lang="ts">
-  import { app } from "$lib/state/app.svelte";
-  import { tick } from "svelte";
-
-  let composer = $state("");
-  let scrollBox = $state<HTMLElement | null>(null);
+  import { app, SECTIONS, type Section } from "$lib/state/app.svelte";
+  import ChatView from "$lib/views/ChatView.svelte";
+  import DashboardView from "$lib/views/DashboardView.svelte";
+  import ModelsView from "$lib/views/ModelsView.svelte";
+  import ConfigView from "$lib/views/ConfigView.svelte";
+  import FilesView from "$lib/views/FilesView.svelte";
+  import CronView from "$lib/views/CronView.svelte";
+  import ApprovalsView from "$lib/views/ApprovalsView.svelte";
+  import SkillsView from "$lib/views/SkillsView.svelte";
+  import ToolsView from "$lib/views/ToolsView.svelte";
+  import LogsView from "$lib/views/LogsView.svelte";
+  import SystemView from "$lib/views/SystemView.svelte";
+  import OnboardingView from "$lib/views/OnboardingView.svelte";
 
   const connected = $derived(app.status === "connected");
-  const busy = $derived(app.activeRunId !== null || app.draft.length > 0);
 
-  $effect(() => {
-    // auto-scroll on new content
-    void app.messages.length;
-    void app.draft;
-    void tick().then(() => {
-      scrollBox?.scrollTo({ top: scrollBox.scrollHeight, behavior: "smooth" });
-    });
-  });
+  const VIEWS: Record<Section, typeof ChatView> = {
+    chat: ChatView,
+    dashboard: DashboardView,
+    models: ModelsView,
+    config: ConfigView,
+    files: FilesView,
+    cron: CronView,
+    approvals: ApprovalsView,
+    skills: SkillsView,
+    tools: ToolsView,
+    logs: LogsView,
+    system: SystemView,
+    onboarding: OnboardingView,
+  };
 
-  async function handleSend() {
-    const text = composer;
-    composer = "";
-    await app.send(text);
-  }
-
-  function handleKeydown(e: KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      void handleSend();
-    }
-  }
-
-  function sessionLabel(key: string): string {
-    const row = app.sessions.find((s) => s.key === key);
-    return row?.label || key;
-  }
+  const ActiveView = $derived(VIEWS[app.section]);
 </script>
 
 {#if !connected}
   <main class="connect-screen">
     <div class="connect-card">
-      <h1 class="brand">OpenClaw <span>Desktop</span> <em class="lobster">🦞</em></h1>
-      <p class="tagline">The gateway, on the grid.</p>
+      <div class="claw-mark">🦞</div>
+      <h1 class="brand">OpenClaw <span>Pincers</span></h1>
+      <p class="tagline">Get a grip on your gateway.</p>
 
       <label>
         Gateway URL
@@ -66,77 +64,38 @@
   </main>
 {:else}
   <main class="shell">
-    <aside class="sidebar">
-      <div class="sidebar-header">
+    <nav class="rail">
+      <div class="rail-brand">
+        <span class="rail-claw">🦞</span>
+        <span class="rail-name">Pincers</span>
+      </div>
+
+      <div class="rail-items">
+        {#each SECTIONS as s (s.id)}
+          <button
+            class="rail-item"
+            class:active={app.section === s.id}
+            onclick={() => (app.section = s.id)}
+            title={s.label}
+          >
+            <span class="rail-icon">{s.icon}</span>
+            <span class="rail-label">{s.label}</span>
+          </button>
+        {/each}
+      </div>
+
+      <div class="rail-footer">
         <div class="conn-dot"></div>
         <div class="conn-info">
-          <strong>v{app.hello?.server.version ?? "?"}</strong>
-          <small>{app.hello?.auth.scopes.join(", ")}</small>
+          <small>v{app.hello?.server.version ?? "?"}</small>
         </div>
-        <button class="ghost" title="Disconnect" onclick={() => app.disconnect()}>⏻</button>
+        <button class="rail-item" title="Disconnect" onclick={() => app.disconnect()}>
+          <span class="rail-icon">⏻</span>
+        </button>
       </div>
+    </nav>
 
-      <div class="sidebar-title">Sessions</div>
-      <div class="session-list">
-        {#each app.sessions as s (s.key)}
-          <button
-            class="session-row"
-            class:active={s.key === app.activeKey}
-            onclick={() => app.selectSession(s.key)}
-          >
-            <span class="session-name">{sessionLabel(s.key)}</span>
-            {#if s.model}<span class="session-model">{s.model}</span>{/if}
-          </button>
-        {:else}
-          <div class="empty">No sessions discovered — chatting with the default session.</div>
-        {/each}
-      </div>
-    </aside>
-
-    <section class="chat">
-      <header class="chat-header">
-        <h2>{sessionLabel(app.activeKey)}</h2>
-        <code>{app.activeKey}</code>
-      </header>
-
-      <div class="messages" bind:this={scrollBox}>
-        {#if app.loadingHistory}
-          <div class="empty">Loading history…</div>
-        {/if}
-        {#each app.messages as m, i (i)}
-          <div class="msg {m.role}">
-            <div class="msg-role">{m.role === "user" ? "You" : "Assistant"}{m.aborted ? " (aborted)" : ""}</div>
-            <div class="msg-text">{m.text}</div>
-          </div>
-        {/each}
-        {#if app.draft}
-          <div class="msg assistant streaming">
-            <div class="msg-role">Assistant</div>
-            <div class="msg-text">{app.draft}<span class="cursor">▊</span></div>
-          </div>
-        {:else if busy}
-          <div class="msg assistant"><div class="msg-role">Assistant</div><div class="msg-text thinking">thinking…</div></div>
-        {/if}
-      </div>
-
-      {#if app.chatError}
-        <div class="error inline">{app.chatError}</div>
-      {/if}
-
-      <footer class="composer">
-        <textarea
-          bind:value={composer}
-          onkeydown={handleKeydown}
-          placeholder="Message the agent… (Enter to send, Shift+Enter for newline)"
-          rows="2"
-        ></textarea>
-        {#if busy}
-          <button class="danger" onclick={() => app.abort()}>Abort</button>
-        {:else}
-          <button class="primary" onclick={handleSend} disabled={!composer.trim()}>Send</button>
-        {/if}
-      </footer>
-    </section>
+    <ActiveView />
   </main>
 {/if}
 
@@ -159,7 +118,7 @@
     background: radial-gradient(ellipse at 30% 20%, #141b2e 0%, #0b0e14 60%);
   }
   .connect-card {
-    width: 380px;
+    width: 400px;
     padding: 32px;
     border-radius: 14px;
     background: #11141d;
@@ -169,15 +128,13 @@
     flex-direction: column;
     gap: 14px;
   }
-  .brand { margin: 0; font-size: 26px; letter-spacing: 0.5px; }
+  .claw-mark { font-size: 44px; text-align: center; filter: drop-shadow(0 0 16px rgba(255, 63, 164, 0.7)); }
+  .brand { margin: 0; font-size: 26px; letter-spacing: 0.5px; text-align: center; }
   .brand span { color: #ff3fa4; }
-  .lobster { font-style: normal; filter: drop-shadow(0 0 10px rgba(255, 63, 164, 0.6)); }
-  .detect { align-self: flex-start; font-size: 12px; color: #8fa0c8; border: 1px dashed #2a3350; border-radius: 8px; padding: 7px 10px; }
-  .detect:hover { color: #ff3fa4; border-color: #ff3fa4; }
-  .tagline { margin: 0 0 8px; color: #7c86a0; font-size: 13px; }
+  .tagline { margin: 0 0 8px; color: #7c86a0; font-size: 13px; text-align: center; }
   label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #9aa4bc; }
   .hint { color: #5b6478; font-size: 11px; }
-  input, textarea {
+  input {
     background: #0b0e14;
     border: 1px solid #2a3350;
     border-radius: 8px;
@@ -186,23 +143,12 @@
     font-size: 14px;
     outline: none;
   }
-  input:focus, textarea:focus { border-color: #ff3fa4; }
-
-  button {
-    border: none;
-    border-radius: 8px;
-    padding: 10px 16px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s;
-  }
+  input:focus { border-color: #ff3fa4; }
+  button { border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 600; cursor: pointer; }
   button:disabled { opacity: 0.4; cursor: default; }
   .primary { background: linear-gradient(135deg, #ff3fa4, #7b5bff); color: white; }
-  .danger { background: #b3364a; color: white; }
-  .ghost { background: transparent; color: #7c86a0; padding: 6px 8px; }
-  .ghost:hover { color: #ff3fa4; }
-
+  .detect { align-self: flex-start; font-size: 12px; color: #8fa0c8; border: 1px dashed #2a3350; border-radius: 8px; padding: 7px 10px; background: transparent; }
+  .detect:hover { color: #ff3fa4; border-color: #ff3fa4; }
   .error {
     background: rgba(179, 54, 74, 0.15);
     border: 1px solid #b3364a;
@@ -211,86 +157,38 @@
     font-size: 13px;
     color: #ff9aa8;
   }
-  .error.inline { margin: 0 16px 8px; }
 
   /* ---------- Shell ---------- */
   .shell { display: flex; height: 100vh; }
-  .sidebar {
-    width: 260px;
+  .rail {
+    width: 86px;
     background: #0e1119;
     border-right: 1px solid #1d2333;
     display: flex;
     flex-direction: column;
+    align-items: center;
     flex-shrink: 0;
   }
-  .sidebar-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px;
-    border-bottom: 1px solid #1d2333;
+  .rail-brand {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 14px 0 10px; border-bottom: 1px solid #1d2333; width: 100%;
   }
-  .conn-dot { width: 9px; height: 9px; border-radius: 50%; background: #3fdd8c; box-shadow: 0 0 8px #3fdd8c; }
-  .conn-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-  .conn-info small { color: #5b6478; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sidebar-title { padding: 12px 14px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #5b6478; }
-  .session-list { overflow-y: auto; flex: 1; padding: 0 8px 12px; }
-  .session-row {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    width: 100%;
-    text-align: left;
-    background: transparent;
-    color: #b8c0d4;
-    padding: 9px 10px;
-    border-radius: 8px;
-    font-weight: 500;
+  .rail-claw { font-size: 24px; filter: drop-shadow(0 0 8px rgba(255, 63, 164, 0.6)); }
+  .rail-name { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: #ff3fa4; text-transform: uppercase; }
+  .rail-items { flex: 1; overflow-y: auto; width: 100%; padding: 8px 6px; display: flex; flex-direction: column; gap: 2px; }
+  .rail-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: transparent; color: #7c86a0; padding: 8px 2px; border-radius: 10px;
+    font-weight: 500; width: 100%;
   }
-  .session-row:hover { background: #161b28; }
-  .session-row.active { background: #1c2337; color: #fff; box-shadow: inset 2px 0 0 #ff3fa4; }
-  .session-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-  .session-model { font-size: 10px; color: #5b6478; }
-  .empty { color: #5b6478; font-size: 13px; padding: 12px; }
-
-  .chat { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-  .chat-header {
-    padding: 14px 20px;
-    border-bottom: 1px solid #1d2333;
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
+  .rail-item:hover { background: #161b28; color: #d7dce6; }
+  .rail-item.active { background: #1c2337; color: #fff; box-shadow: inset 0 0 0 1px #2a3350, inset 2px 0 0 #ff3fa4; }
+  .rail-icon { font-size: 17px; }
+  .rail-label { font-size: 9px; letter-spacing: 0.3px; }
+  .rail-footer {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 10px 0; border-top: 1px solid #1d2333; width: 100%;
   }
-  .chat-header h2 { margin: 0; font-size: 16px; }
-  .chat-header code { color: #5b6478; font-size: 11px; }
-
-  .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
-  .msg { max-width: 78%; }
-  .msg.user { align-self: flex-end; }
-  .msg.assistant { align-self: flex-start; }
-  .msg-role { font-size: 11px; color: #5b6478; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .msg-text {
-    padding: 12px 14px;
-    border-radius: 12px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-size: 14px;
-    line-height: 1.55;
-  }
-  .msg.user .msg-text { background: #2a3a6e; border-bottom-right-radius: 4px; }
-  .msg.assistant .msg-text { background: #151a28; border: 1px solid #232a3d; border-bottom-left-radius: 4px; }
-  .msg.streaming .msg-text { border-color: #ff3fa4; }
-  .cursor { animation: blink 1s steps(2) infinite; color: #ff3fa4; }
-  @keyframes blink { 50% { opacity: 0; } }
-  .thinking { color: #7c86a0; font-style: italic; }
-
-  .composer {
-    display: flex;
-    gap: 10px;
-    padding: 14px 16px;
-    border-top: 1px solid #1d2333;
-    align-items: flex-end;
-  }
-  .composer textarea { flex: 1; resize: none; font-family: inherit; }
+  .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: #3fdd8c; box-shadow: 0 0 8px #3fdd8c; }
+  .conn-info small { color: #5b6478; font-size: 9px; }
 </style>

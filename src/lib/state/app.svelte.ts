@@ -9,6 +9,39 @@ const LS_URL = "ocd.gatewayUrl";
 const LS_TOKEN = "ocd.token";
 const LS_SESSION = "ocd.sessionKey";
 
+export type Section =
+  | "chat"
+  | "dashboard"
+  | "models"
+  | "config"
+  | "files"
+  | "cron"
+  | "approvals"
+  | "skills"
+  | "tools"
+  | "logs"
+  | "system"
+  | "onboarding";
+
+export const SECTIONS: { id: Section; label: string; icon: string }[] = [
+  { id: "chat", label: "Chat", icon: "💬" },
+  { id: "dashboard", label: "Dashboard", icon: "📊" },
+  { id: "models", label: "Models", icon: "🧠" },
+  { id: "config", label: "Config", icon: "⚙️" },
+  { id: "files", label: "Files", icon: "📁" },
+  { id: "cron", label: "Cron", icon: "⏰" },
+  { id: "approvals", label: "Approvals", icon: "🛡️" },
+  { id: "skills", label: "Skills", icon: "✨" },
+  { id: "tools", label: "Tools", icon: "🔧" },
+  { id: "logs", label: "Logs", icon: "📜" },
+  { id: "system", label: "System", icon: "🖥️" },
+  { id: "onboarding", label: "Setup", icon: "🚀" },
+];
+
+export type RpcResult =
+  | { ok: true; data: unknown }
+  | { ok: false; error: string };
+
 function genIdem(): string {
   return `ocd_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
 }
@@ -19,6 +52,8 @@ class AppState {
   status = $state<ConnectionStatus>("disconnected");
   hello = $state<HelloOk | null>(null);
   connectError = $state("");
+  section = $state<Section>("chat");
+  agents = $state<{ agentId: string; [k: string]: unknown }[]>([]);
 
   gatewayUrl = $state(localStorage.getItem(LS_URL) ?? "ws://127.0.0.1:18789");
   token = $state(localStorage.getItem(LS_TOKEN) ?? "");
@@ -80,6 +115,7 @@ class AppState {
       localStorage.setItem(LS_URL, this.gatewayUrl.trim());
       localStorage.setItem(LS_TOKEN, this.token.trim());
       await this.refreshSessions();
+      await this.refreshAgents();
       await this.loadHistory();
     } catch (err) {
       this.connectError = friendlyConnectError(err);
@@ -113,6 +149,34 @@ class AppState {
       this.sessions = await this.client.listSessions();
     } catch {
       // sessions discovery is best-effort in v0.1
+    }
+  }
+
+  async refreshAgents() {
+    try {
+      const res = (await this.client.request("agents.list", {})) as unknown;
+      const rows = Array.isArray(res)
+        ? res
+        : (((res as Record<string, unknown>)?.agents ??
+            (res as Record<string, unknown>)?.items ??
+            []) as unknown[]);
+      this.agents = (Array.isArray(rows) ? rows : []).map((r) => {
+        const o = r as Record<string, unknown>;
+        return { ...o, agentId: String(o.agentId ?? o.id ?? "main") };
+      });
+    } catch {
+      this.agents = [];
+    }
+  }
+
+  /** Generic RPC passthrough for section views. Never throws. */
+  async rpc(method: string, params?: unknown): Promise<RpcResult> {
+    try {
+      const data = await this.client.request(method, params);
+      return { ok: true, data };
+    } catch (err) {
+      const e = err as { code?: string; message?: string };
+      return { ok: false, error: e?.code ? `${e.code}: ${e.message}` : String(e?.message ?? err) };
     }
   }
 
