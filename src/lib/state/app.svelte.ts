@@ -52,6 +52,8 @@ class AppState {
   status = $state<ConnectionStatus>("disconnected");
   hello = $state<HelloOk | null>(null);
   connectError = $state("");
+  pairing = $state<{ requestId: string; attempts: number } | null>(null);
+  private pairingTimer: ReturnType<typeof setInterval> | null = null;
   section = $state<Section>("chat");
   agents = $state<{ agentId: string; [k: string]: unknown }[]>([]);
 
@@ -112,14 +114,46 @@ class AppState {
     try {
       const hello = await this.client.connect(this.gatewayUrl.trim(), this.token.trim() || undefined);
       this.hello = hello;
+      this.stopPairingRetry();
       localStorage.setItem(LS_URL, this.gatewayUrl.trim());
       localStorage.setItem(LS_TOKEN, this.token.trim());
       await this.refreshSessions();
       await this.refreshAgents();
       await this.loadHistory();
     } catch (err) {
+      const e = err as { code?: string; message?: string; details?: unknown };
+      if (e?.code === "NOT_PAIRED") {
+        // Device pairing pending: surface it and auto-retry until approved.
+        const requestId = extractRequestId(e) ?? this.pairing?.requestId ?? "";
+        this.pairing = { requestId, attempts: (this.pairing?.attempts ?? 0) + 1 };
+        this.startPairingRetry();
+        return;
+      }
       this.connectError = friendlyConnectError(err);
     }
+  }
+
+  private startPairingRetry() {
+    if (this.pairingTimer) return;
+    this.pairingTimer = setInterval(() => {
+      if ((this.pairing?.attempts ?? 0) > 45) {
+        // ~3 minutes of retries; give up and show a manual message.
+        this.stopPairingRetry();
+        this.connectError =
+          "Still waiting for pairing approval. Run: openclaw devices list → openclaw devices approve <requestId>, then hit Connect.";
+        this.pairing = null;
+        return;
+      }
+      void this.connect();
+    }, 4000);
+  }
+
+  stopPairingRetry() {
+    if (this.pairingTimer) {
+      clearInterval(this.pairingTimer);
+      this.pairingTimer = null;
+    }
+    this.pairing = null;
   }
 
   /** Pull URL + token from the local OpenClaw config via the Rust backend. */
@@ -233,6 +267,14 @@ class AppState {
       this.chatError = err instanceof Error ? err.message : String(err);
     }
   }
+}
+
+function extractRequestId(err: { details?: unknown; message?: string }): string | null {
+  const d = err.details as Record<string, unknown> | undefined;
+  const fromDetails = (d?.requestId ?? d?.pairingRequestId) as string | undefined;
+  if (fromDetails) return fromDetails;
+  const m = err.message?.match(/requestId:\s*([0-9a-f-]+)/i);
+  return m?.[1] ?? null;
 }
 
 function friendlyConnectError(err: unknown): string {

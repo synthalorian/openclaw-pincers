@@ -53,6 +53,16 @@
         ⚡ Detect local gateway (fills URL + token from ~/.openclaw)
       </button>
 
+      {#if app.pairing}
+        <div class="pairing">
+          <div class="pairing-title">🦞 Pairing approval needed</div>
+          <p>This device introduced itself to the gateway and is waiting for approval.
+          Approve it from any terminal:</p>
+          <code>openclaw devices approve {app.pairing.requestId || "<requestId>"}</code>
+          <p class="retrying">Auto-retrying… (attempt {app.pairing.attempts})</p>
+        </div>
+      {/if}
+
       {#if app.connectError}
         <div class="error">{app.connectError}</div>
       {/if}
@@ -157,6 +167,21 @@
     font-size: 13px;
     color: #ff9aa8;
   }
+  .pairing {
+    background: rgba(255, 207, 110, 0.08);
+    border: 1px solid #6e5b1f;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: #e8d9b0;
+  }
+  .pairing-title { font-weight: 700; color: #ffcf6e; margin-bottom: 6px; }
+  .pairing p { margin: 6px 0; color: #b8ab8a; line-height: 1.5; }
+  .pairing code {
+    display: block; background: #0b0e14; border: 1px solid #2a3350; border-radius: 6px;
+    padding: 8px 10px; margin: 8px 0; font-size: 11.5px; color: #ffcf6e; word-break: break-all;
+  }
+  .pairing .retrying { color: #7c86a0; font-size: 11px; font-style: italic; }
 
   /* ---------- Shell ---------- */
   .shell { display: flex; height: 100vh; }
