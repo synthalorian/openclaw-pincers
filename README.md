@@ -1,7 +1,7 @@
-# OpenClaw Desktop
+# OpenClaw Pincers 🦞
 
-**The gateway, on the grid.** A standalone cross-platform desktop client for
-[OpenClaw](https://github.com/openclaw/openclaw), built with Tauri 2 + Svelte 5 + TypeScript.
+**Get a grip on your gateway.** A standalone cross-platform desktop client for
+[OpenClaw](https://github.com/openclaw/openclaw), built with Tauri 2 + Svelte 5 + TypeScript. Twelve sections: Chat, Dashboard, Models, Config, Files, Cron, Approvals, Skills, Tools, Logs, System, and Setup — full CLI parity over the Gateway WS protocol.
 
 Talks to any OpenClaw Gateway over the official WebSocket protocol (v4) —
 no shim, no fork, no screen-scraping. Device-auth handshake implemented

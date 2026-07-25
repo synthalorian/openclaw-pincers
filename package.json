@@ -1,7 +1,7 @@
 {
   "name": "openclaw-desktop",
   "version": "0.1.0",
-  "description": "",
+  "description": "OpenClaw Pincers — the desktop control center for OpenClaw gateways",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
