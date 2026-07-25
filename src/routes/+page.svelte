@@ -39,7 +39,7 @@
 {#if !connected}
   <main class="connect-screen">
     <div class="connect-card">
-      <h1 class="brand">OpenClaw <span>Desktop</span></h1>
+      <h1 class="brand">OpenClaw <span>Desktop</span> <em class="lobster">🦞</em></h1>
       <p class="tagline">The gateway, on the grid.</p>
 
       <label>
@@ -47,9 +47,13 @@
         <input bind:value={app.gatewayUrl} placeholder="ws://127.0.0.1:18789" spellcheck="false" />
       </label>
       <label>
-        Token <span class="hint">(optional, if gateway auth is enabled)</span>
+        Token <span class="hint">(if the gateway requires auth)</span>
         <input bind:value={app.token} type="password" placeholder="gateway token" spellcheck="false" />
       </label>
+
+      <button class="ghost detect" onclick={() => app.detectLocalGateway()}>
+        ⚡ Detect local gateway (fills URL + token from ~/.openclaw)
+      </button>
 
       {#if app.connectError}
         <div class="error">{app.connectError}</div>
@@ -167,6 +171,9 @@
   }
   .brand { margin: 0; font-size: 26px; letter-spacing: 0.5px; }
   .brand span { color: #ff3fa4; }
+  .lobster { font-style: normal; filter: drop-shadow(0 0 10px rgba(255, 63, 164, 0.6)); }
+  .detect { align-self: flex-start; font-size: 12px; color: #8fa0c8; border: 1px dashed #2a3350; border-radius: 8px; padding: 7px 10px; }
+  .detect:hover { color: #ff3fa4; border-color: #ff3fa4; }
   .tagline { margin: 0 0 8px; color: #7c86a0; font-size: 13px; }
   label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #9aa4bc; }
   .hint { color: #5b6478; font-size: 11px; }

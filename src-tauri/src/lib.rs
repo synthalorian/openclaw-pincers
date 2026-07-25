@@ -82,11 +82,53 @@ fn sign_device_payload(app: tauri::AppHandle, payload: String) -> Result<String,
     Ok(URL_SAFE_NO_PAD.encode(sig.to_bytes()))
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct LocalGatewayAuth {
+    url: String,
+    token: String,
+}
+
+/// Reads the local OpenClaw config (~/.openclaw/openclaw.json) and returns the
+/// loopback gateway URL + auth token when configured. Convenience for
+/// first-run onboarding; nothing is written and the token stays on-device.
+#[tauri::command]
+fn local_gateway_auth() -> Result<Option<LocalGatewayAuth>, String> {
+    let home = std::env::var_os("HOME").ok_or("HOME not set")?;
+    let path = PathBuf::from(home).join(".openclaw").join("openclaw.json");
+    if !path.exists() {
+        return Ok(None);
+    }
+    let raw = fs::read_to_string(&path).map_err(|e| format!("read {}: {e}", path.display()))?;
+    let cfg: serde_json::Value =
+        serde_json::from_str(&raw).map_err(|e| format!("parse {}: {e}", path.display()))?;
+    let token = cfg
+        .pointer("/gateway/auth/token")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    if token.is_empty() {
+        return Ok(None);
+    }
+    let port = cfg
+        .pointer("/gateway/port")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(18789);
+    Ok(Some(LocalGatewayAuth {
+        url: format!("ws://127.0.0.1:{port}"),
+        token,
+    }))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![device_identity, sign_device_payload])
+        .invoke_handler(tauri::generate_handler![
+            device_identity,
+            sign_device_payload,
+            local_gateway_auth
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
