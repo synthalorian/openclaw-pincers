@@ -26,14 +26,14 @@
   .json-wrap { position: relative; }
   .copy {
     position: absolute; top: 8px; right: 8px; z-index: 1;
-    background: #1c2337; color: #8fa0c8; border: 1px solid #2a3350;
+    background: var(--bg-active); color: var(--text4); border: 1px solid var(--border-input);
     border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer;
   }
-  .copy:hover { color: #ff3fa4; border-color: #ff3fa4; }
+  .copy:hover { color: var(--accent); border-color: var(--accent); }
   pre {
-    margin: 0; padding: 14px; background: #0b0e14; border: 1px solid #1d2333;
+    margin: 0; padding: 14px; background: var(--bg); border: 1px solid var(--border);
     border-radius: 10px; overflow: auto; max-height: 60vh;
-    font-size: 12px; line-height: 1.5; color: #a8e6c8;
+    font-size: 12px; line-height: 1.5; color: var(--mono);
     font-family: "JetBrains Mono", "Fira Code", monospace;
   }
 </style>

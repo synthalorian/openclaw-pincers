@@ -93,29 +93,29 @@
 
 <style>
   .notice {
-    background: rgba(63, 221, 140, 0.1); border: 1px solid #2a7a52; color: #7fe6b0;
+    background: rgba(63, 221, 140, 0.1); border: 1px solid var(--success-border); color: var(--success-text);
     border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 12px;
   }
   .lookup-bar { display: flex; gap: 8px; margin-bottom: 12px; }
   .lookup-bar input {
-    flex: 1; background: #0b0e14; border: 1px solid #2a3350; border-radius: 8px;
-    color: #e6ebf5; padding: 9px 12px; font-size: 13px; outline: none;
+    flex: 1; background: var(--bg); border: 1px solid var(--border-input); border-radius: 8px;
+    color: var(--text); padding: 9px 12px; font-size: 13px; outline: none;
     font-family: "JetBrains Mono", monospace;
   }
-  .lookup-bar input:focus { border-color: #ff3fa4; }
+  .lookup-bar input:focus { border-color: var(--accent); }
   .lookup-result { margin-bottom: 12px; }
-  .hash { font-size: 11px; color: #5b6478; margin-bottom: 8px; }
-  .hash code { color: #8fa0c8; }
+  .hash { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .hash code { color: var(--text4); }
   .editor {
     width: 100%; min-height: 55vh; resize: vertical;
-    background: #0b0e14; border: 1px solid #2a3350; border-radius: 10px;
-    color: #a8e6c8; padding: 14px; font-size: 12.5px; line-height: 1.55; outline: none;
+    background: var(--bg); border: 1px solid var(--border-input); border-radius: 10px;
+    color: var(--mono); padding: 14px; font-size: 12.5px; line-height: 1.55; outline: none;
     font-family: "JetBrains Mono", "Fira Code", monospace;
   }
-  .editor:focus { border-color: #ff3fa4; }
-  .dirty { font-size: 11px; color: #ffcf6e; }
-  .primary { background: linear-gradient(135deg, #ff3fa4, #7b5bff); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .editor:focus { border-color: var(--accent); }
+  .dirty { font-size: 11px; color: var(--warning); }
+  .primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
   .primary:disabled { opacity: 0.4; cursor: default; }
-  .ghost { background: #1c2337; color: #8fa0c8; border: 1px solid #2a3350; border-radius: 8px; padding: 8px 12px; font-size: 12px; cursor: pointer; }
-  .ghost:hover { color: #ff3fa4; border-color: #ff3fa4; }
+  .ghost { background: var(--bg-active); color: var(--text4); border: 1px solid var(--border-input); border-radius: 8px; padding: 8px 12px; font-size: 12px; cursor: pointer; }
+  .ghost:hover { color: var(--accent); border-color: var(--accent); }
 </style>

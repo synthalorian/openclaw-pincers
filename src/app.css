@@ -1,0 +1,50 @@
+/* OpenClaw Pincers — theme tokens. Default = Grid Dark. */
+
+:root {
+  --bg: #0b0e14;
+  --bg-panel: #0e1119;
+  --bg-card: #11141d;
+  --bg-hover: #161b28;
+  --bg-active: #1c2337;
+  --bg-msg: #151a28;
+  --border: #1d2333;
+  --border2: #232a3d;
+  --border-input: #2a3350;
+  --text: #d7dce6;
+  --text2: #b8c0d4;
+  --text3: #9aa4bc;
+  --text4: #8fa0c8;
+  --text5: #7c86a0;
+  --muted: #5b6478;
+  --accent: #ff3fa4;
+  --accent2: #7b5bff;
+  --success: #3fdd8c;
+  --success-border: #2a7a52;
+  --success-text: #7fe6b0;
+  --danger: #b3364a;
+  --danger-text: #ff9aa8;
+  --warning: #ffcf6e;
+  --warning-border: #6e5b1f;
+  --warning-text: #e8d9b0;
+  --mono: #a8e6c8;
+  --bubble-user: #2a3a6e;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+}
+
+::selection { background: var(--accent); color: #fff; }
+
+/* theme-aware scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--border-input) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--border-input); border-radius: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }

@@ -54,9 +54,9 @@
 
 <style>
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-  .card { background: #11141d; border: 1px solid #232a3d; border-radius: 10px; padding: 14px; }
-  .name { font-weight: 600; font-size: 14px; color: #ff3fa4; }
-  .desc { font-size: 12px; color: #9aa4bc; margin-top: 6px; line-height: 1.45; }
-  .ver { font-size: 10px; color: #5b6478; margin-top: 8px; }
-  .empty { color: #5b6478; padding: 20px; }
+  .card { background: var(--bg-card); border: 1px solid var(--border2); border-radius: 10px; padding: 14px; }
+  .name { font-weight: 600; font-size: 14px; color: var(--accent); }
+  .desc { font-size: 12px; color: var(--text3); margin-top: 6px; line-height: 1.45; }
+  .ver { font-size: 10px; color: var(--muted); margin-top: 8px; }
+  .empty { color: var(--muted); padding: 20px; }
 </style>
