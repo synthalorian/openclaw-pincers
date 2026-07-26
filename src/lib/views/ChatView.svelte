@@ -27,6 +27,14 @@
   let newBusy = $state(false);
   let newError = $state("");
 
+  // Mobile: session pane as slide-over drawer
+  let drawerOpen = $state(false);
+
+  async function pickSession(key: string) {
+    drawerOpen = false;
+    await app.selectSession(key);
+  }
+
   const agentOptions = $derived(
     app.agents.length ? app.agents.map((a) => a.agentId) : ["main"],
   );
@@ -132,7 +140,10 @@
 </script>
 
 <div class="chat-layout">
-  <aside class="session-pane">
+  {#if drawerOpen}
+    <button class="drawer-scrim" aria-label="close sessions" onclick={() => (drawerOpen = false)}></button>
+  {/if}
+  <aside class="session-pane" class:open={drawerOpen}>
     <div class="pane-title-row">
       <div class="pane-title">Sessions</div>
       <button
@@ -167,7 +178,7 @@
         <button
           class="session-row"
           class:active={s.key === app.activeKey}
-          onclick={() => app.selectSession(s.key)}
+          onclick={() => pickSession(s.key)}
         >
           <span class="session-name">{sessionLabel(s.key)}</span>
           <span class="session-sub">
@@ -191,6 +202,7 @@
     ondrop={handleDrop}
   >
     <header class="chat-header">
+      <button class="drawer-btn" aria-label="open sessions" onclick={() => (drawerOpen = true)}>☰</button>
       <h2>{sessionLabel(app.activeKey)}</h2>
       <code>{app.activeKey}</code>
     </header>
@@ -329,8 +341,39 @@
 
   .chat { flex: 1; display: flex; flex-direction: column; min-width: 0; }
   .chat-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; gap: 12px; }
-  .chat-header h2 { margin: 0; font-size: 16px; }
-  .chat-header code { color: var(--muted); font-size: 11px; }
+  .chat-header h2 { margin: 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-header code { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .drawer-btn { display: none; }
+  .drawer-scrim { display: none; }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 720px) {
+    .drawer-btn {
+      display: grid; place-items: center; align-self: center;
+      width: 36px; height: 36px; flex-shrink: 0;
+      background: var(--bg-active); border: 1px solid var(--border-input); border-radius: 9px;
+      color: var(--text3); font-size: 16px; cursor: pointer;
+    }
+    .drawer-scrim {
+      display: block; position: fixed; inset: 0; z-index: 44;
+      background: rgba(0, 0, 0, 0.55); border: none;
+    }
+    .session-pane {
+      position: fixed; left: 0; top: 0; bottom: 0; z-index: 45;
+      width: min(320px, 84vw);
+      transform: translateX(-105%);
+      transition: transform 0.22s ease;
+      border-right: 1px solid var(--border2);
+      box-shadow: 12px 0 48px rgba(0, 0, 0, 0.55);
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+    .session-pane.open { transform: translateX(0); }
+    .chat-header { padding: 10px 12px; gap: 10px; }
+    .chat-header h2 { font-size: 15px; }
+    .messages { padding: 14px 12px; gap: 12px; }
+    .msg { max-width: 88%; }
+    .composer { padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px)); gap: 8px; }
+  }
 
   .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
   .msg { max-width: 78%; }

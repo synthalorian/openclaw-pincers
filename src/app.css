@@ -38,7 +38,17 @@ body {
   background: var(--bg);
   color: var(--text);
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* ---------- Mobile (≤720px) ---------- */
+@media (max-width: 720px) {
+  /* wide tables get horizontal scroll instead of breaking layout */
+  table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  thead, tbody { display: table; min-width: 100%; }
+  input, select, textarea { font-size: 16px; } /* no focus zoom, thumb-friendly */
 }
 
 ::selection { background: var(--accent); color: #fff; }
