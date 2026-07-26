@@ -41,7 +41,7 @@
 {#if !connected}
   <main class="connect-screen">
     <div class="connect-card">
-      <div class="claw-mark">🦞</div>
+      <div class="claw-mark"><img src="/pincers-logo.png" alt="OpenClaw Pincers logo" /></div>
       <h1 class="brand">OpenClaw <span>Pincers</span></h1>
       <p class="tagline">Get a grip on your gateway.</p>
 
@@ -81,7 +81,7 @@
   <main class="shell">
     <nav class="rail">
       <div class="rail-brand">
-        <span class="rail-claw">🦞</span>
+        <img class="rail-logo" src="/pincers-logo.png" alt="Pincers" />
         <span class="rail-name">Pincers</span>
       </div>
 
@@ -147,7 +147,11 @@
     flex-direction: column;
     gap: 14px;
   }
-  .claw-mark { font-size: 44px; text-align: center; filter: drop-shadow(0 0 16px rgba(255, 63, 164, 0.7)); }
+  .claw-mark img {
+    width: 132px; height: 132px; border-radius: 28px;
+    box-shadow: 0 0 44px rgba(255, 63, 164, 0.45), 0 12px 32px rgba(0, 0, 0, 0.6);
+  }
+  .claw-mark { text-align: center; }
   .brand { margin: 0; font-size: 26px; letter-spacing: 0.5px; text-align: center; }
   .brand span { color: var(--accent); }
   .tagline { margin: 0 0 8px; color: var(--text5); font-size: 13px; text-align: center; }
@@ -207,7 +211,10 @@
     display: flex; flex-direction: column; align-items: center; gap: 2px;
     padding: 14px 0 10px; border-bottom: 1px solid var(--border); width: 100%;
   }
-  .rail-claw { font-size: 24px; filter: drop-shadow(0 0 8px rgba(255, 63, 164, 0.6)); }
+  .rail-logo {
+    width: 34px; height: 34px; border-radius: 9px;
+    box-shadow: 0 0 10px rgba(255, 63, 164, 0.5);
+  }
   .rail-name { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--accent); text-transform: uppercase; }
   .rail-items { flex: 1; overflow-y: auto; width: 100%; padding: 8px 6px; display: flex; flex-direction: column; gap: 2px; }
   .rail-item {
