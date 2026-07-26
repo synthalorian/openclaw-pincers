@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🦞 OpenClaw Pincers
+<img src="assets/openclawpincers.png" alt="OpenClaw Pincers" width="256" />
+
+# OpenClaw Pincers
 
 **Get a grip on your gateway.**
 
