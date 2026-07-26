@@ -18,6 +18,7 @@ import type {
   EventFrame,
   GatewayFrame,
   HelloOk,
+  SessionCreateParams,
   SessionRow,
 } from "./protocol";
 
@@ -303,6 +304,16 @@ export class GatewayClient {
 
   chatAbort(sessionKey: string, runId?: string): Promise<unknown> {
     return this.request("chat.abort", { sessionKey, runId });
+  }
+
+  /** Create a new session; resolves with the canonical session key. */
+  async createSession(params: SessionCreateParams): Promise<string> {
+    const res = await this.request<unknown>("sessions.create", params);
+    const key = (res as Record<string, unknown>)?.key;
+    if (typeof key !== "string" || !key.trim()) {
+      throw new GatewayError({ code: "BAD_RESPONSE", message: "sessions.create returned no key" });
+    }
+    return key.trim();
   }
 }
 
