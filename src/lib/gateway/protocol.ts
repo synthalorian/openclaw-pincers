@@ -79,6 +79,13 @@ export interface ConnectChallenge {
 
 // ---------- Chat ----------
 
+export interface ChatAttachment {
+  type?: string;
+  fileName: string;
+  mimeType: string;
+  content: string; // base64 (data-URL prefix optional — gateway strips it)
+}
+
 export interface ChatSendParams {
   sessionKey: string;
   message: string;
@@ -87,6 +94,7 @@ export interface ChatSendParams {
   sessionId?: string;
   deliver?: boolean;
   timeoutMs?: number;
+  attachments?: ChatAttachment[];
 }
 
 export type ChatSendAck =
@@ -127,6 +135,8 @@ export interface ChatMessage {
   messageId?: string;
   timestamp?: number;
   aborted?: boolean;
+  /** Local-only echo of attached images (data URLs), not from history. */
+  images?: string[];
 }
 
 // ---------- Sessions ----------
