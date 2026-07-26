@@ -16,8 +16,18 @@
   import ThemePicker from "$lib/components/ThemePicker.svelte";
 
   let themePickerOpen = $state(false);
+  let moreOpen = $state(false);
 
   const connected = $derived(app.status === "connected");
+
+  // Bottom tab bar (mobile): primary sections + "More" sheet for the rest.
+  const PRIMARY_TABS: Section[] = ["chat", "agents", "approvals", "cron", "dashboard"];
+  const primaryTabs = $derived(SECTIONS.filter((s) => PRIMARY_TABS.includes(s.id)));
+
+  function goSection(id: Section) {
+    app.section = id;
+    moreOpen = false;
+  }
 
   const VIEWS: Record<Section, typeof ChatView> = {
     chat: ChatView,
@@ -115,6 +125,57 @@
 
     <ThemePicker bind:open={themePickerOpen} />
     <ActiveView />
+
+    <!-- Mobile bottom tab bar -->
+    <nav class="tabbar">
+      {#each primaryTabs as s (s.id)}
+        <button
+          class="tab"
+          class:active={app.section === s.id && !moreOpen}
+          onclick={() => goSection(s.id)}
+        >
+          <span class="tab-icon">{s.icon}</span>
+          <span class="tab-label">{s.label}</span>
+        </button>
+      {/each}
+      <button class="tab" class:active={moreOpen} onclick={() => (moreOpen = !moreOpen)}>
+        <span class="tab-icon">⋯</span>
+        <span class="tab-label">More</span>
+      </button>
+    </nav>
+
+    <!-- Mobile "More" bottom sheet -->
+    {#if moreOpen}
+      <button class="sheet-scrim" aria-label="close menu" onclick={() => (moreOpen = false)}></button>
+      <div class="sheet">
+        <div class="sheet-grip"></div>
+        <div class="sheet-title">All sections</div>
+        <div class="sheet-grid">
+          {#each SECTIONS as s (s.id)}
+            <button
+              class="sheet-item"
+              class:active={app.section === s.id}
+              onclick={() => goSection(s.id)}
+            >
+              <span class="sheet-icon">{s.icon}</span>
+              <span>{s.label}</span>
+            </button>
+          {/each}
+        </div>
+        <div class="sheet-actions">
+          <button class="sheet-action" onclick={() => { moreOpen = false; themePickerOpen = true; }}>
+            <span class="sheet-icon">🎨</span> Themes
+          </button>
+          <button class="sheet-action danger" onclick={() => app.disconnect()}>
+            <span class="sheet-icon">⏻</span> Disconnect
+          </button>
+        </div>
+        <div class="sheet-conn">
+          <span class="conn-dot"></span>
+          <span>gateway v{app.hello?.server.version ?? "?"}</span>
+        </div>
+      </div>
+    {/if}
   </main>
 {/if}
 
@@ -197,7 +258,7 @@
   .pairing .retrying { color: var(--text5); font-size: 11px; font-style: italic; }
 
   /* ---------- Shell ---------- */
-  .shell { display: flex; height: 100vh; }
+  .shell { display: flex; height: 100vh; height: 100dvh; }
   .rail {
     width: 86px;
     background: var(--bg-panel);
@@ -232,4 +293,68 @@
   }
   .conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
   .conn-info small { color: var(--muted); font-size: 9px; }
+
+  /* ---------- Mobile tab bar + sheet (hidden on desktop) ---------- */
+  .tabbar, .sheet, .sheet-scrim { display: none; }
+
+  @media (max-width: 720px) {
+    .shell { flex-direction: column; }
+    .rail { display: none; }
+
+    .tabbar {
+      display: flex;
+      flex-shrink: 0;
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .tab {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+      background: transparent; border: none; color: var(--text5);
+      padding: 8px 2px 6px; min-height: 52px; cursor: pointer; font-weight: 500;
+    }
+    .tab:active { background: var(--bg-hover); }
+    .tab.active { color: var(--accent); }
+    .tab-icon { font-size: 20px; }
+    .tab-label { font-size: 10px; letter-spacing: 0.2px; }
+
+    .sheet-scrim {
+      display: block; position: fixed; inset: 0; z-index: 44;
+      background: rgba(0, 0, 0, 0.55); border: none;
+    }
+    .sheet {
+      display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+      background: var(--bg-panel); border-top: 1px solid var(--border2);
+      border-radius: 16px 16px 0 0; padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+      box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.6);
+      max-height: 72vh; overflow-y: auto;
+    }
+    .sheet-grip { width: 36px; height: 4px; border-radius: 2px; background: var(--border-input); margin: 4px auto 10px; }
+    .sheet-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+    .sheet-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .sheet-item {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      background: var(--bg-card); border: 1px solid var(--border2); border-radius: 10px;
+      padding: 12px 6px; color: var(--text2); font-size: 12px; font-weight: 500; cursor: pointer;
+    }
+    .sheet-item.active { border-color: var(--accent); color: var(--accent); }
+    .sheet-icon { font-size: 20px; }
+    .sheet-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .sheet-action {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--bg-card); border: 1px solid var(--border2); border-radius: 10px;
+      padding: 12px; color: var(--text2); font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    .sheet-action.danger { color: var(--danger-text); border-color: var(--danger); }
+    .sheet-conn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 12px; font-size: 11px; color: var(--muted);
+    }
+  }
+
+  /* Connect screen small-device fit */
+  @media (max-width: 480px) {
+    .connect-card { width: 92vw; padding: 24px 20px; }
+    .claw-mark img { width: 108px; height: 108px; border-radius: 24px; }
+  }
 </style>
