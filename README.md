@@ -9,9 +9,9 @@
 A standalone, cross-platform desktop control center for
 [OpenClaw](https://github.com/openclaw/openclaw) — chat, config, cron,
 approvals, models, files, logs, and updates. Everything the CLI does,
-with claws.
+with claws. Now on Android too.
 
-![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-blue)
+![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Android-blue)
 ![Stack](https://img.shields.io/badge/stack-Tauri%202%20%C2%B7%20Svelte%205%20%C2%B7%20TypeScript%20%C2%B7%20Rust-orange)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Protocol](https://img.shields.io/badge/gateway%20protocol-v4-purple)
@@ -108,11 +108,33 @@ Releases are built by GitHub Actions: push a `v*` tag and the pipeline
 ships Linux (deb/rpm/AppImage), macOS (arm64 + x64 dmg), and Windows
 (msi/nsis) artifacts to a GitHub Release.
 
+### Android
+
+Prereqs: JDK 17, Android SDK (platform 36, build-tools 36) + NDK r28,
+and Rust Android targets:
+
+```bash
+rustup target add aarch64-linux-android armv7-linux-androideabi \
+  i686-linux-android x86_64-linux-android
+export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+export ANDROID_HOME=$HOME/Android/Sdk
+export NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358
+
+npx tauri android init                      # once — scaffolds src-tauri/gen/android
+npx tauri android dev                       # dev on a connected device/emulator
+npx tauri android build --apk --target aarch64   # signed release APK
+```
+
+Release signing uses `src-tauri/gen/android/keystore.properties`
+(gitignored) pointing at `pincers-release.jks`. The APK enables cleartext
+traffic so it can reach plain `ws://` gateways on your LAN or tailnet —
+pair it like any new device (`openclaw devices approve`).
+
 ## Architecture
 
 ```
 ┌────────────────────────────────────────────┐
-│ Svelte 5 UI (12 sections, theme engine)    │
+│ Svelte 5 UI (13 sections, theme engine)    │
 ├────────────────────────────────────────────┤
 │ GatewayClient (TypeScript)                 │
 │   WS transport · req/res correlation       │
