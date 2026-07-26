@@ -94,10 +94,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            *.deb
-            *.rpm
-            *.AppImage
-            *.dmg
-            *.msi
-            *.exe
+            **/*.deb
+            **/*.rpm
+            **/*.AppImage
+            **/*.dmg
+            **/*.msi
+            **/*.exe
           generate_release_notes: true
