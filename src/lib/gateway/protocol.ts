@@ -152,6 +152,27 @@ export interface SessionRow {
   [k: string]: unknown;
 }
 
+export interface SessionCreateParams {
+  agentId?: string;
+  label?: string;
+  currentSessionKey?: string;
+  parentSessionKey?: string;
+  fork?: boolean;
+}
+
+// ---------- Agents ----------
+
+export interface AgentRow {
+  agentId: string;
+  name?: string;
+  identity?: string;
+  model?: string;
+  workspace?: string;
+  agentDir?: string;
+  isDefault?: boolean;
+  [k: string]: unknown;
+}
+
 // ---------- Health / status ----------
 
 export interface HealthSnapshot {

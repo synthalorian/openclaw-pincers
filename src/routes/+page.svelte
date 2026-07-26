@@ -1,6 +1,7 @@
 <script lang="ts">
   import { app, SECTIONS, type Section } from "$lib/state/app.svelte";
   import ChatView from "$lib/views/ChatView.svelte";
+  import AgentsView from "$lib/views/AgentsView.svelte";
   import DashboardView from "$lib/views/DashboardView.svelte";
   import ModelsView from "$lib/views/ModelsView.svelte";
   import ConfigView from "$lib/views/ConfigView.svelte";
@@ -20,6 +21,7 @@
 
   const VIEWS: Record<Section, typeof ChatView> = {
     chat: ChatView,
+    agents: AgentsView,
     dashboard: DashboardView,
     models: ModelsView,
     config: ConfigView,

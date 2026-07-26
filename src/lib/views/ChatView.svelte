@@ -20,6 +20,39 @@
   let fileInput = $state<HTMLInputElement | null>(null);
   let lightbox = $state<string | null>(null);
 
+  // --- New session form ---
+  let newOpen = $state(false);
+  let newAgentId = $state("main");
+  let newLabel = $state("");
+  let newBusy = $state(false);
+  let newError = $state("");
+
+  const agentOptions = $derived(
+    app.agents.length ? app.agents.map((a) => a.agentId) : ["main"],
+  );
+
+  async function createNewSession() {
+    newBusy = true;
+    newError = "";
+    try {
+      await app.createSession({ agentId: newAgentId, label: newLabel });
+      newOpen = false;
+      newLabel = "";
+    } catch (err) {
+      newError = err instanceof Error ? err.message : String(err);
+    } finally {
+      newBusy = false;
+    }
+  }
+
+  function sessionAgent(key: string): string {
+    const fromRow = app.sessions.find((s) => s.key === key)?.agentId;
+    if (fromRow) return fromRow;
+    // sessions.list rows don't carry agentId — parse `agent:<id>:…` keys.
+    const m = key.match(/^agent:([^:]+):/);
+    return m?.[1] ?? "";
+  }
+
   const busy = $derived(app.activeRunId !== null || app.draft.length > 0);
 
   $effect(() => {
@@ -100,7 +133,35 @@
 
 <div class="chat-layout">
   <aside class="session-pane">
-    <div class="pane-title">Sessions</div>
+    <div class="pane-title-row">
+      <div class="pane-title">Sessions</div>
+      <button
+        class="new-session-btn"
+        class:active={newOpen}
+        title="New session"
+        onclick={() => (newOpen = !newOpen)}
+      >＋</button>
+    </div>
+    {#if newOpen}
+      <div class="new-session-form">
+        <label>
+          Agent
+          <select bind:value={newAgentId}>
+            {#each agentOptions as id (id)}
+              <option value={id}>{id}</option>
+            {/each}
+          </select>
+        </label>
+        <label>
+          Label <span class="hint">(optional)</span>
+          <input bind:value={newLabel} placeholder="e.g. refactor spike" spellcheck="false" />
+        </label>
+        {#if newError}<div class="new-error">{newError}</div>{/if}
+        <button class="primary create" onclick={createNewSession} disabled={newBusy}>
+          {newBusy ? "Creating…" : "Create session"}
+        </button>
+      </div>
+    {/if}
     <div class="session-list">
       {#each app.sessions as s (s.key)}
         <button
@@ -109,7 +170,10 @@
           onclick={() => app.selectSession(s.key)}
         >
           <span class="session-name">{sessionLabel(s.key)}</span>
-          {#if s.model}<span class="session-model">{s.model}</span>{/if}
+          <span class="session-sub">
+            {#if sessionAgent(s.key)}<span class="session-agent">{sessionAgent(s.key)}</span>{/if}
+            {#if s.model}<span class="session-model">{s.model}</span>{/if}
+          </span>
         </button>
       {:else}
         <div class="empty">No sessions discovered.</div>
@@ -222,6 +286,35 @@
     background: var(--bg-panel);
   }
   .pane-title { padding: 12px 14px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .pane-title-row { display: flex; align-items: center; justify-content: space-between; padding-right: 10px; }
+  .new-session-btn {
+    background: transparent; border: 1px solid var(--border-input); color: var(--text4);
+    border-radius: 7px; width: 24px; height: 24px; padding: 0; font-size: 14px; line-height: 1;
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .new-session-btn:hover, .new-session-btn.active { color: var(--accent); border-color: var(--accent); }
+  .new-session-form {
+    margin: 6px 10px 4px; padding: 10px; display: flex; flex-direction: column; gap: 8px;
+    background: var(--bg-card); border: 1px solid var(--border2); border-radius: 10px;
+  }
+  .new-session-form label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; color: var(--text3); }
+  .new-session-form .hint { color: var(--muted); font-size: 10px; }
+  .new-session-form select, .new-session-form input {
+    background: var(--bg); border: 1px solid var(--border-input); border-radius: 7px;
+    color: var(--text); padding: 7px 9px; font-size: 12.5px; outline: none; width: 100%;
+  }
+  .new-session-form select:focus, .new-session-form input:focus { border-color: var(--accent); }
+  .new-session-form .create { padding: 8px 10px; font-size: 12.5px; }
+  .new-error {
+    background: rgba(179, 54, 74, 0.15); border: 1px solid var(--danger); border-radius: 7px;
+    padding: 7px 9px; font-size: 11.5px; color: var(--danger-text); word-break: break-word;
+  }
+  .session-sub { display: flex; gap: 6px; align-items: center; }
+  .session-agent {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--accent); background: var(--bg); border: 1px solid var(--border-input);
+    padding: 1px 5px; border-radius: 999px;
+  }
   .session-list { overflow-y: auto; flex: 1; padding: 0 8px 12px; }
   .session-row {
     display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
