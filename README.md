@@ -130,6 +130,28 @@ Release signing uses `src-tauri/gen/android/keystore.properties`
 traffic so it can reach plain `ws://` gateways on your LAN or tailnet —
 pair it like any new device (`openclaw devices approve`).
 
+#### Connecting your phone from anywhere (Tailscale)
+
+Gateways bind to loopback by default, and many routers block
+client-to-client traffic ("AP isolation") — so the reliable path is a
+tailnet:
+
+1. Set `gateway.bind: "lan"` in `~/.openclaw/openclaw.json` and restart
+   the gateway (token auth is required for non-loopback binds — the
+   default).
+2. If you run a firewall, allow the port (e.g. `sudo ufw allow 18789/tcp`).
+3. Install [Tailscale](https://tailscale.com) on both the gateway host and
+   your phone, sign into the same account.
+4. In Pincers on your phone, use the host's tailnet IP:
+   `ws://100.x.y.z:18789` + your gateway token.
+5. First connect raises a pairing request — approve it:
+   `openclaw devices approve <requestId>`
+   (the requestId shows in the app, or in the gateway log).
+
+Works on home wifi, mobile data, coffee-shop wifi — anywhere Tailscale
+reaches. Note: Android allows one VPN at a time, so Tailscale and other
+VPN apps trade places on the phone.
+
 ## Architecture
 
 ```
