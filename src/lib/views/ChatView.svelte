@@ -120,7 +120,7 @@
   <section
     class="chat"
     class:drag-over={dragOver}
-    role="region"
+    role="group"
     aria-label="Chat with image drop zone"
     ondragover={(e) => { e.preventDefault(); dragOver = true; }}
     ondragleave={() => (dragOver = false)}
