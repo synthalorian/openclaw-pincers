@@ -53,6 +53,10 @@
   .section-header p { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
   .header-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
   .section-body { flex: 1; overflow-y: auto; padding: 18px 22px; }
+  @media (max-width: 720px) {
+    .section-header { padding: 12px 14px 10px; flex-wrap: wrap; }
+    .section-body { padding: 12px 14px; }
+  }
   .error {
     margin: 12px 22px 0; background: rgba(179, 54, 74, 0.15); border: 1px solid var(--danger);
     border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--danger-text);
