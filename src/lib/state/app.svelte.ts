@@ -3,7 +3,7 @@
  */
 
 import { GatewayClient, isChatEvent, type ConnectionStatus } from "$lib/gateway/client";
-import type { ChatAttachment, ChatMessage, HelloOk, SessionRow } from "$lib/gateway/protocol";
+import type { AgentRow, ChatAttachment, ChatMessage, HelloOk, SessionRow } from "$lib/gateway/protocol";
 import { THEMES, type ThemeDef } from "$lib/themes";
 
 const LS_URL = "ocd.gatewayUrl";
@@ -13,6 +13,7 @@ const LS_THEME = "ocd.theme";
 
 export type Section =
   | "chat"
+  | "agents"
   | "dashboard"
   | "models"
   | "config"
@@ -27,6 +28,7 @@ export type Section =
 
 export const SECTIONS: { id: Section; label: string; icon: string }[] = [
   { id: "chat", label: "Chat", icon: "💬" },
+  { id: "agents", label: "Agents", icon: "🤖" },
   { id: "dashboard", label: "Dashboard", icon: "📊" },
   { id: "models", label: "Models", icon: "🧠" },
   { id: "config", label: "Config", icon: "⚙️" },
@@ -57,7 +59,7 @@ class AppState {
   pairing = $state<{ requestId: string; attempts: number } | null>(null);
   private pairingTimer: ReturnType<typeof setInterval> | null = null;
   section = $state<Section>("chat");
-  agents = $state<{ agentId: string; [k: string]: unknown }[]>([]);
+  agents = $state<AgentRow[]>([]);
   themeId = $state(localStorage.getItem(LS_THEME) ?? "grid");
 
   get theme(): ThemeDef {
@@ -210,11 +212,41 @@ class AppState {
             []) as unknown[]);
       this.agents = (Array.isArray(rows) ? rows : []).map((r) => {
         const o = r as Record<string, unknown>;
-        return { ...o, agentId: String(o.agentId ?? o.id ?? "main") };
+        const identity = (o.identity ?? {}) as Record<string, unknown>;
+        const model = o.model;
+        return {
+          ...o,
+          agentId: String(o.agentId ?? o.id ?? "main"),
+          name: (o.name ?? identity.name ?? o.identityName) as string | undefined,
+          // model can be a string or an object like { primary: "provider/model" }
+          model: (typeof model === "string"
+            ? model
+            : ((model as Record<string, unknown> | null)?.primary ?? o.effectiveModel)) as
+            | string
+            | undefined,
+          workspace: o.workspace as string | undefined,
+          agentDir: (o.agentDir ?? o.agentDirectory) as string | undefined,
+          isDefault: Boolean(o.default ?? o.isDefault),
+        } as AgentRow;
       });
     } catch {
       this.agents = [];
     }
+  }
+
+  /**
+   * Create a fresh session (optionally for a specific agent + label),
+   * refresh the session index, jump to it in Chat, and return its key.
+   */
+  async createSession(opts: { agentId?: string; label?: string }): Promise<string> {
+    const params: Record<string, unknown> = {};
+    if (opts.agentId?.trim()) params.agentId = opts.agentId.trim();
+    if (opts.label?.trim()) params.label = opts.label.trim();
+    const key = await this.client.createSession(params);
+    await this.refreshSessions();
+    this.section = "chat";
+    await this.selectSession(key);
+    return key;
   }
 
   /** Generic RPC passthrough for section views. Never throws. */
