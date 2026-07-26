@@ -3,7 +3,7 @@
  */
 
 import { GatewayClient, isChatEvent, type ConnectionStatus } from "$lib/gateway/client";
-import type { ChatMessage, HelloOk, SessionRow } from "$lib/gateway/protocol";
+import type { ChatAttachment, ChatMessage, HelloOk, SessionRow } from "$lib/gateway/protocol";
 import { THEMES, type ThemeDef } from "$lib/themes";
 
 const LS_URL = "ocd.gatewayUrl";
@@ -255,17 +255,18 @@ class AppState {
     }
   }
 
-  async send(text: string) {
+  async send(text: string, attachments?: ChatAttachment[], localImages?: string[]) {
     const message = text.trim();
-    if (!message || this.status !== "connected") return;
+    if ((!message && !attachments?.length) || this.status !== "connected") return;
     this.chatError = "";
-    this.messages.push({ role: "user", text: message, timestamp: Date.now() });
+    this.messages.push({ role: "user", text: message, images: localImages, timestamp: Date.now() });
     try {
       const ack = await this.client.chatSend({
         sessionKey: this.activeKey,
-        message,
+        message: message || "[image]",
         idempotencyKey: genIdem(),
         sessionId: this.sessionId,
+        attachments,
       });
       if (ack.runId) this.activeRunId = ack.runId;
     } catch (err) {
