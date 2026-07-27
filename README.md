@@ -200,10 +200,10 @@ src-tauri/src/lib.rs          Device identity + signing + local detection
 ## Roadmap
 
 - [ ] Embedded terminal (gateway PTY over `terminal.*`)
-- [ ] Node pairing with QR codes (`device.pair.setupCode`)
-- [ ] Per-session model picker in chat
+- [x] Node pairing with QR codes (`device.pair.setupCode`)
+- [x] Per-session model picker in chat
 - [ ] Talk/TTS voice mode
-- [ ] Desktop notifications for approvals
+- [x] Desktop notifications for approvals
 - [ ] Signed macOS/Windows builds
 
 ## Contributing
