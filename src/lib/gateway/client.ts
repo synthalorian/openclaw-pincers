@@ -158,7 +158,9 @@ export class GatewayClient {
       ws.onerror = () => fail(new Error(`WebSocket error connecting to ${url}`));
       ws.onclose = (ev) => {
         if (!settled) {
-          fail(new Error(`Connection closed during handshake (code ${ev.code})`));
+          // Gateway rejects (e.g. pairing required, origin) arrive as 1008 with a reason string.
+          const why = ev.reason ? `: ${ev.reason}` : "";
+          fail(new Error(`Connection closed during handshake (code ${ev.code}${why})`));
           return;
         }
         this.setStatus("disconnected");

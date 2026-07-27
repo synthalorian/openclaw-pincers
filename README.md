@@ -47,7 +47,10 @@ surface one click away.
 | ⚙️ **Config** | Live config editor with validated writes + schema lookup drill-down |
 | 📁 **Files** | Agent workspace browser (gateway-confined, read-only) |
 | ⏰ **Cron** | Create, enable/disable, run-now, and delete scheduled jobs |
-| 🛡️ **Approvals** | Exec approval inbox with auto-refresh — allow/deny in one click |
+| 🛡️ **Approvals** | Exec approval inbox with auto-refresh — allow/deny in one click, plus native notifications |
+| 📱 **Devices** | Paired-device manager: approve/reject pending pairings inline, generate mobile setup QR codes |
+| ⌨️ **Terminal** | Embedded host PTY (xterm.js) over the gateway — full shell from desktop or phone |
+| 🔊 **Voice** | On-device TTS read-aloud for replies (auto-read toggle + per-message speak) |
 | ✨ **Skills** | Installed skills grid |
 | 🔧 **Tools** | Full gateway tool catalog with filter |
 | 📜 **Logs** | Gateway log tail with follow mode |
@@ -199,10 +202,10 @@ src-tauri/src/lib.rs          Device identity + signing + local detection
 
 ## Roadmap
 
-- [ ] Embedded terminal (gateway PTY over `terminal.*`)
+- [x] Embedded terminal (gateway PTY over `terminal.*`)
 - [x] Node pairing with QR codes (`device.pair.setupCode`)
 - [x] Per-session model picker in chat
-- [ ] Talk/TTS voice mode
+- [x] Talk/TTS voice mode (v1: on-device read-aloud; v2: full Talk mode needs a provider API key)
 - [x] Desktop notifications for approvals
 - [ ] Signed macOS/Windows builds
 
