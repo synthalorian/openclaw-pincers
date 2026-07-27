@@ -1,6 +1,6 @@
 [package]
 name = "openclaw-desktop"
-version = "0.3.2"
+version = "0.3.3"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -27,4 +27,5 @@ sha2 = "0.10"
 base64 = "0.22"
 rand = "0.8"
 tauri-plugin-notification = "2.3.3"
+tauri-plugin-clipboard-manager = "2.3.2"
 
