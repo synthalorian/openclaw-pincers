@@ -8,6 +8,7 @@
   import FilesView from "$lib/views/FilesView.svelte";
   import CronView from "$lib/views/CronView.svelte";
   import ApprovalsView from "$lib/views/ApprovalsView.svelte";
+  import DevicesView from "$lib/views/DevicesView.svelte";
   import SkillsView from "$lib/views/SkillsView.svelte";
   import ToolsView from "$lib/views/ToolsView.svelte";
   import LogsView from "$lib/views/LogsView.svelte";
@@ -38,6 +39,7 @@
     files: FilesView,
     cron: CronView,
     approvals: ApprovalsView,
+    devices: DevicesView,
     skills: SkillsView,
     tools: ToolsView,
     logs: LogsView,
@@ -258,7 +260,7 @@
   .pairing .retrying { color: var(--text5); font-size: 11px; font-style: italic; }
 
   /* ---------- Shell ---------- */
-  .shell { display: flex; height: 100vh; height: 100dvh; }
+  .shell { display: flex; height: 100vh; height: 100dvh; padding-top: env(safe-area-inset-top, 0px); }
   .rail {
     width: 86px;
     background: var(--bg-panel);

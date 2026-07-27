@@ -30,6 +30,44 @@
   // Mobile: session pane as slide-over drawer
   let drawerOpen = $state(false);
 
+  // --- Per-session model picker ---
+  let modelOptions = $state<string[]>([]);
+  let modelBusy = $state(false);
+  let modelError = $state("");
+  let modelsLoaded = false;
+
+  const currentModel = $derived(
+    (app.sessions.find((s) => s.key === app.activeKey)?.model as string | undefined) ?? "",
+  );
+
+  $effect(() => {
+    if (app.status === "connected" && !modelsLoaded) {
+      modelsLoaded = true;
+      void loadModels();
+    }
+  });
+
+  async function loadModels() {
+    const res = await app.rpc("models.list", {});
+    if (!res.ok) return;
+    const d = res.data as Record<string, unknown>;
+    const rows = Array.isArray(d) ? d : ((d?.models ?? d?.items ?? []) as unknown[]);
+    modelOptions = (rows as Array<Record<string, unknown>>)
+      .map((m) => String(m.id ?? ""))
+      .filter(Boolean);
+  }
+
+  async function setModel(e: Event) {
+    const v = (e.currentTarget as HTMLSelectElement).value;
+    if (!v || v === currentModel) return;
+    modelBusy = true;
+    modelError = "";
+    const res = await app.rpc("sessions.patch", { key: app.activeKey, model: v });
+    if (!res.ok) modelError = res.error;
+    await app.refreshSessions();
+    modelBusy = false;
+  }
+
   async function pickSession(key: string) {
     drawerOpen = false;
     await app.selectSession(key);
@@ -205,6 +243,22 @@
       <button class="drawer-btn" aria-label="open sessions" onclick={() => (drawerOpen = true)}>☰</button>
       <h2>{sessionLabel(app.activeKey)}</h2>
       <code>{app.activeKey}</code>
+      <select
+        class="model-picker"
+        title="Session model (sessions.patch)"
+        disabled={modelBusy}
+        value={currentModel || "default"}
+        onchange={setModel}
+      >
+        <option value="default">default</option>
+        {#if currentModel && currentModel !== "default" && !modelOptions.includes(currentModel)}
+          <option value={currentModel}>{currentModel}</option>
+        {/if}
+        {#each modelOptions as m (m)}
+          <option value={m}>{m}</option>
+        {/each}
+      </select>
+      {#if modelError}<span class="model-err" title={modelError}>⚠️</span>{/if}
     </header>
 
     <div class="messages" bind:this={scrollBox}>
@@ -341,6 +395,14 @@
 
   .chat { flex: 1; display: flex; flex-direction: column; min-width: 0; }
   .chat-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; gap: 12px; }
+  .model-picker {
+    margin-left: auto; background: var(--bg); color: var(--text3);
+    border: 1px solid var(--border-input); border-radius: 8px;
+    font-size: 11.5px; padding: 5px 8px; max-width: 220px;
+    text-overflow: ellipsis; outline: none;
+  }
+  .model-picker:focus { border-color: var(--accent); }
+  .model-err { color: var(--warning, #ffcf6e); font-size: 13px; }
   .chat-header h2 { margin: 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chat-header code { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .drawer-btn { display: none; }

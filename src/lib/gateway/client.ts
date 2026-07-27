@@ -31,7 +31,7 @@ export const CLIENT_DISPLAY_NAME = "OpenClaw Desktop";
 export const CLIENT_VERSION = "0.1.0";
 export const CLIENT_MODE = "ui";
 export const ROLE = "operator";
-export const SCOPES = ["operator.read", "operator.write"];
+export const SCOPES = ["operator.read", "operator.write", "operator.admin"];
 
 interface DeviceIdentityInfo {
   deviceId: string;

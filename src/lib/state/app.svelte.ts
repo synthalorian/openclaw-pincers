@@ -5,6 +5,7 @@
 import { GatewayClient, isChatEvent, type ConnectionStatus } from "$lib/gateway/client";
 import type { AgentRow, ChatAttachment, ChatMessage, HelloOk, SessionRow } from "$lib/gateway/protocol";
 import { THEMES, type ThemeDef } from "$lib/themes";
+import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 
 const LS_URL = "ocd.gatewayUrl";
 const LS_TOKEN = "ocd.token";
@@ -20,6 +21,7 @@ export type Section =
   | "files"
   | "cron"
   | "approvals"
+  | "devices"
   | "skills"
   | "tools"
   | "logs"
@@ -35,6 +37,7 @@ export const SECTIONS: { id: Section; label: string; icon: string }[] = [
   { id: "files", label: "Files", icon: "📁" },
   { id: "cron", label: "Cron", icon: "⏰" },
   { id: "approvals", label: "Approvals", icon: "🛡️" },
+  { id: "devices", label: "Devices", icon: "📱" },
   { id: "skills", label: "Skills", icon: "✨" },
   { id: "tools", label: "Tools", icon: "🔧" },
   { id: "logs", label: "Logs", icon: "📜" },
@@ -136,6 +139,7 @@ class AppState {
       await this.refreshSessions();
       await this.refreshAgents();
       await this.loadHistory();
+      this.startApprovalWatcher();
     } catch (err) {
       const e = err as { code?: string; message?: string; details?: unknown };
       if (e?.code === "NOT_PAIRED") {
@@ -187,6 +191,7 @@ class AppState {
   }
 
   disconnect() {
+    this.stopApprovalWatcher();
     this.client.close();
     this.hello = null;
     this.messages = [];
@@ -199,6 +204,64 @@ class AppState {
       this.sessions = await this.client.listSessions();
     } catch {
       // sessions discovery is best-effort in v0.1
+    }
+  }
+
+  /* ---------- Approval notifications ---------- */
+  private approvalWatchTimer: ReturnType<typeof setInterval> | null = null;
+  private seenApprovalIds: Set<string> | null = null;
+
+  startApprovalWatcher() {
+    if (this.approvalWatchTimer) return;
+    const check = async () => {
+      if (this.status !== "connected") return;
+      try {
+        const res = await this.rpc("exec.approval.list", {});
+        if (!res.ok) return;
+        const d = res.data as Record<string, unknown>;
+        const rows = Array.isArray(d)
+          ? d
+          : (((d?.approvals ?? d?.pending ?? d?.items ?? []) as unknown[]) ?? []);
+        const ids = new Set<string>();
+        const fresh: string[] = [];
+        for (const a of rows as Array<Record<string, unknown>>) {
+          const id = String(a.id ?? a.approvalId ?? a.requestId ?? "");
+          if (!id) continue;
+          ids.add(id);
+          if (this.seenApprovalIds && !this.seenApprovalIds.has(id)) {
+            fresh.push(String(a.command ?? a.cmd ?? a.title ?? id));
+          }
+        }
+        const seeded = this.seenApprovalIds !== null;
+        this.seenApprovalIds = ids;
+        if (seeded && fresh.length) void this.notifyApprovals(fresh);
+      } catch {
+        // watcher is best-effort
+      }
+    };
+    void check();
+    this.approvalWatchTimer = setInterval(() => void check(), 10_000);
+  }
+
+  stopApprovalWatcher() {
+    if (this.approvalWatchTimer) {
+      clearInterval(this.approvalWatchTimer);
+      this.approvalWatchTimer = null;
+    }
+    this.seenApprovalIds = null;
+  }
+
+  private async notifyApprovals(commands: string[]) {
+    try {
+      let granted = await isPermissionGranted();
+      if (!granted) granted = (await requestPermission()) === "granted";
+      if (!granted) return;
+      sendNotification({
+        title: commands.length === 1 ? "🛡️ Exec approval needed" : `🛡️ ${commands.length} exec approvals needed`,
+        body: commands[0] ? commands[0].slice(0, 120) : "Open Pincers → Approvals to review.",
+      });
+    } catch {
+      // notifications unavailable on this platform
     }
   }
 
