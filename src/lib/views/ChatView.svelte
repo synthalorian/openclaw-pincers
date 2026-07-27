@@ -3,6 +3,7 @@
   import { tick } from "svelte";
   import type { ChatAttachment } from "$lib/gateway/protocol";
   import { filterCommands, getCommand, type SlashCommand } from "$lib/commands";
+  import { readImage, readText } from "@tauri-apps/plugin-clipboard-manager";
 
   const MAX_IMAGE_BYTES = 6 * 1024 * 1024; // gateway MAX_IMAGE_BYTES
 
@@ -263,6 +264,57 @@
     handlePaste(e);
   }
 
+  // --- Native clipboard paste (desktop) ---
+  // webkit2gtk can't expose clipboard *images* through ClipboardEvent at all, so on
+  // desktop we bypass the web clipboard entirely and read the system clipboard via
+  // the Tauri clipboard plugin (wl-clipboard/X11 under the hood). Ctrl+V is
+  // intercepted before the native paste fires.
+  const isDesktopTauri =
+    typeof window !== "undefined" && "__TAURI_INTERNALS__" in window && !/android/i.test(navigator.userAgent);
+
+  async function pasteFromSystemClipboard() {
+    attachError = "";
+    try {
+      const img = await readImage();
+      const { width, height } = await img.size();
+      const rgba = await img.rgba();
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d")!.putImageData(new ImageData(new Uint8ClampedArray(rgba), width, height), 0, 0);
+      const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/png"));
+      if (blob) {
+        const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+        addFiles([new File([blob], `pasted-${stamp}.png`, { type: "image/png" })]);
+        composerEl?.focus();
+        return;
+      }
+    } catch {
+      // no image on the clipboard — fall through to text
+    }
+    try {
+      const text = await readText();
+      if (text && composerEl) {
+        const el = composerEl;
+        el.setRangeText(text, el.selectionStart ?? composer.length, el.selectionEnd ?? composer.length, "end");
+        composer = el.value;
+        el.focus();
+      }
+    } catch {
+      // empty clipboard
+    }
+  }
+
+  function handlePasteKeydown(e: KeyboardEvent) {
+    if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "v") return;
+    if (!isDesktopTauri) return; // Android keeps the native paste path
+    const target = e.target as HTMLElement | null;
+    const editable = target?.closest("textarea, input, [contenteditable='true']");
+    if (editable && editable !== composerEl) return; // other fields paste natively
+    e.preventDefault();
+    void pasteFromSystemClipboard();
+  }
+
   function handleDrop(e: DragEvent) {
     e.preventDefault();
     dragOver = false;
@@ -351,7 +403,7 @@
   }
 </script>
 
-<svelte:window onpaste={handleWindowPaste} />
+<svelte:window onpaste={handleWindowPaste} onkeydown={handlePasteKeydown} />
 
 <div class="chat-layout">
   {#if drawerOpen}
