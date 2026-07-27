@@ -19,6 +19,7 @@
   let attachError = $state("");
   let dragOver = $state(false);
   let fileInput = $state<HTMLInputElement | null>(null);
+  let composerEl = $state<HTMLTextAreaElement | null>(null);
   let lightbox = $state<string | null>(null);
 
   // --- New session form ---
@@ -206,7 +207,7 @@
 
   function addFiles(files: Iterable<File>) {
     attachError = "";
-    for (const file of files) {
+    for (let file of files) {
       if (!file.type.startsWith("image/")) {
         attachError = `Only image/* files for now (“${file.name}” is ${file.type || "unknown"}).`;
         continue;
@@ -214,6 +215,13 @@
       if (file.size > MAX_IMAGE_BYTES) {
         attachError = `“${file.name}” is ${(file.size / 1048576).toFixed(1)}MB — gateway image limit is 6MB.`;
         continue;
+      }
+      // Clipboard screenshots arrive with generic names ("image.png") — give them
+      // a timestamped name so multiple pastes stay distinguishable.
+      if (!file.name || /^image\.\w+$/.test(file.name)) {
+        const ext = file.type.split("/")[1] || "png";
+        const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+        file = new File([file], `pasted-${stamp}.${ext}`, { type: file.type });
       }
       const reader = new FileReader();
       reader.onload = () => {
@@ -223,12 +231,36 @@
     }
   }
 
+  function clipboardFiles(e: ClipboardEvent): File[] {
+    const out: File[] = [];
+    // items first (more reliable than .files in webkit2gtk — Spectacle/KDE copies
+    // show up as items with kind "file" even when the files array stays empty)
+    for (const item of e.clipboardData?.items ?? []) {
+      if (item.kind === "file") {
+        const f = item.getAsFile();
+        if (f) out.push(f);
+      }
+    }
+    if (!out.length) out.push(...(e.clipboardData?.files ?? []));
+    return out;
+  }
+
   function handlePaste(e: ClipboardEvent) {
-    const files = [...(e.clipboardData?.files ?? [])];
+    const files = clipboardFiles(e);
     if (files.length) {
       e.preventDefault();
       addFiles(files);
+      composerEl?.focus();
     }
+  }
+
+  // Window-level paste: catches screenshots even when the textarea isn't focused.
+  // Skips events from other editable fields so their normal text paste still works.
+  function handleWindowPaste(e: ClipboardEvent) {
+    const target = e.target as HTMLElement | null;
+    const inEditable = !!target?.closest("textarea, input, [contenteditable='true']");
+    if (inEditable) return; // the field's own handler (or native text paste) takes it
+    handlePaste(e);
   }
 
   function handleDrop(e: DragEvent) {
@@ -318,6 +350,8 @@
     return row?.label || key;
   }
 </script>
+
+<svelte:window onpaste={handleWindowPaste} />
 
 <div class="chat-layout">
   {#if drawerOpen}
@@ -513,6 +547,7 @@
       >/</button>
       <button class="attach" title="Attach images" onclick={() => fileInput?.click()}>📎</button>
       <textarea
+        bind:this={composerEl}
         bind:value={composer}
         onkeydown={handleKeydown}
         onpaste={handlePaste}
