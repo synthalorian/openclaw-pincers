@@ -9,6 +9,7 @@
   import CronView from "$lib/views/CronView.svelte";
   import ApprovalsView from "$lib/views/ApprovalsView.svelte";
   import DevicesView from "$lib/views/DevicesView.svelte";
+  import TerminalView from "$lib/views/TerminalView.svelte";
   import SkillsView from "$lib/views/SkillsView.svelte";
   import ToolsView from "$lib/views/ToolsView.svelte";
   import LogsView from "$lib/views/LogsView.svelte";
@@ -40,6 +41,7 @@
     cron: CronView,
     approvals: ApprovalsView,
     devices: DevicesView,
+    terminal: TerminalView,
     skills: SkillsView,
     tools: ToolsView,
     logs: LogsView,

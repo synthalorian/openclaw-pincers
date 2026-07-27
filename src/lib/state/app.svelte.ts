@@ -22,6 +22,7 @@ export type Section =
   | "cron"
   | "approvals"
   | "devices"
+  | "terminal"
   | "skills"
   | "tools"
   | "logs"
@@ -38,6 +39,7 @@ export const SECTIONS: { id: Section; label: string; icon: string }[] = [
   { id: "cron", label: "Cron", icon: "⏰" },
   { id: "approvals", label: "Approvals", icon: "🛡️" },
   { id: "devices", label: "Devices", icon: "📱" },
+  { id: "terminal", label: "Terminal", icon: "⌨️" },
   { id: "skills", label: "Skills", icon: "✨" },
   { id: "tools", label: "Tools", icon: "🔧" },
   { id: "logs", label: "Logs", icon: "📜" },
