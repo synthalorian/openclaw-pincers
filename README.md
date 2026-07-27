@@ -70,6 +70,13 @@ surface one click away.
 
 Runtime deps: `webkit2gtk-4.1`, `gtk3`, `libsoup3` (preinstalled on most desktops).
 
+Running the raw release binary instead of a package? Install the launcher +
+official icons with:
+
+```bash
+./scripts/install-desktop.sh   # idempotent; re-run after pulling new brand assets
+```
+
 ### macOS
 
 Download the DMG for your chip (`arm64` = Apple Silicon, `x64` = Intel) and
