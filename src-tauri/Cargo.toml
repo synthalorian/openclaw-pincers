@@ -26,4 +26,5 @@ ed25519-dalek = "2"
 sha2 = "0.10"
 base64 = "0.22"
 rand = "0.8"
+tauri-plugin-notification = "2.3.3"
 
