@@ -36,6 +36,57 @@
   let modelError = $state("");
   let modelsLoaded = false;
 
+  // --- Voice (on-device TTS read-aloud) ---
+  const ttsSupported = typeof window !== "undefined" && "speechSynthesis" in window;
+  let voiceOn = $state(false);
+  let speaking = $state(false);
+  let lastSpokenCount = 0;
+
+  function stripForSpeech(text: string): string {
+    return text
+      .replace(/```[\s\S]*?```/g, ", code block, ")
+      .replace(/`[^`]*`/g, " ")
+      .replace(/[*_~#>|]/g, "")
+      .replace(/\s{2,}/g, " ")
+      .trim()
+      .slice(0, 1500);
+  }
+
+  function speak(text: string) {
+    if (!ttsSupported || !text) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(stripForSpeech(text));
+    u.onend = () => (speaking = false);
+    u.onerror = () => (speaking = false);
+    speaking = true;
+    window.speechSynthesis.speak(u);
+  }
+
+  function stopSpeaking() {
+    if (!ttsSupported) return;
+    window.speechSynthesis.cancel();
+    speaking = false;
+  }
+
+  function voiceButton() {
+    if (speaking) stopSpeaking();
+    else voiceOn = !voiceOn;
+  }
+
+  // Auto-read completed assistant replies while voiceOn is enabled
+  $effect(() => {
+    const msgs = app.messages;
+    if (!voiceOn) {
+      lastSpokenCount = msgs.length;
+      return;
+    }
+    if (msgs.length > lastSpokenCount) {
+      const last = msgs[msgs.length - 1];
+      if (last?.role === "assistant" && !app.draft && last.text) speak(last.text);
+    }
+    lastSpokenCount = msgs.length;
+  });
+
   const currentModel = $derived(
     (app.sessions.find((s) => s.key === app.activeKey)?.model as string | undefined) ?? "",
   );
@@ -259,6 +310,16 @@
         {/each}
       </select>
       {#if modelError}<span class="model-err" title={modelError}>⚠️</span>{/if}
+      {#if ttsSupported}
+        <button
+          class="voice-btn"
+          class:voice-on={voiceOn}
+          onclick={voiceButton}
+          title={speaking ? "Stop speaking" : voiceOn ? "Auto-read replies: ON" : "Auto-read replies: OFF"}
+        >
+          {speaking ? "⏹" : voiceOn ? "🔊" : "🔇"}
+        </button>
+      {/if}
     </header>
 
     <div class="messages" bind:this={scrollBox}>
@@ -267,7 +328,12 @@
       {/if}
       {#each app.messages as m, i (i)}
         <div class="msg {m.role}">
-          <div class="msg-role">{m.role === "user" ? "You" : "Assistant"}{m.aborted ? " (aborted)" : ""}</div>
+          <div class="msg-role">
+            {m.role === "user" ? "You" : "Assistant"}{m.aborted ? " (aborted)" : ""}
+            {#if ttsSupported && m.role === "assistant" && m.text}
+              <button class="msg-speak" onclick={() => speak(m.text)} title="Read aloud">🔊</button>
+            {/if}
+          </div>
           {#if m.images?.length}
             <div class="msg-images">
               {#each m.images as src (src.slice(0, 64))}
@@ -403,6 +469,10 @@
   }
   .model-picker:focus { border-color: var(--accent); }
   .model-err { color: var(--warning, #ffcf6e); font-size: 13px; }
+  .voice-btn { background: transparent; border: 1px solid var(--border-input); border-radius: 8px; padding: 4px 8px; font-size: 13px; cursor: pointer; }
+  .voice-btn.voice-on { border-color: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .msg-speak { background: none; border: none; font-size: 11px; cursor: pointer; opacity: 0.55; padding: 0 4px; }
+  .msg-speak:hover { opacity: 1; }
   .chat-header h2 { margin: 0; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .chat-header code { color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .drawer-btn { display: none; }
