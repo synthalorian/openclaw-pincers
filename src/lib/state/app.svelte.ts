@@ -5,12 +5,14 @@
 import { GatewayClient, isChatEvent, type ConnectionStatus } from "$lib/gateway/client";
 import type { AgentRow, ChatAttachment, ChatMessage, HelloOk, SessionRow } from "$lib/gateway/protocol";
 import { THEMES, type ThemeDef } from "$lib/themes";
+import { getCommand, parseSlashCommand } from "$lib/commands";
 import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
 
 const LS_URL = "ocd.gatewayUrl";
 const LS_TOKEN = "ocd.token";
 const LS_SESSION = "ocd.sessionKey";
 const LS_THEME = "ocd.theme";
+const LS_SLASH = "ocd.slashCommands";
 
 export type Section =
   | "chat"
@@ -75,6 +77,14 @@ class AppState {
     this.themeId = id;
     localStorage.setItem(LS_THEME, id);
     applyTheme(this.theme);
+  }
+
+  /** Slash commands (/new /stop /model …) — enabled by default, persisted. */
+  slashCommands = $state(localStorage.getItem(LS_SLASH) !== "off");
+
+  setSlashCommands(on: boolean) {
+    this.slashCommands = on;
+    localStorage.setItem(LS_SLASH, on ? "on" : "off");
   }
 
   gatewayUrl = $state(localStorage.getItem(LS_URL) ?? "ws://127.0.0.1:18789");
@@ -401,6 +411,75 @@ class AppState {
       this.chatError = err instanceof Error ? err.message : String(err);
       this.messages.push({ role: "assistant", text: `⚠ send failed: ${this.chatError}`, timestamp: Date.now() });
     }
+  }
+
+  /**
+   * Route a "/..." message. Local commands run client-side (they manage UI
+   * session state and must not desync); everything else goes through chat.send
+   * and the gateway executes it — the result arrives as a normal chat final
+   * event. Returns true when the text was consumed as a command.
+   */
+  async handleSlashCommand(text: string): Promise<boolean> {
+    const parsed = parseSlashCommand(text);
+    if (!parsed || this.status !== "connected") return false;
+    const cmd = getCommand(parsed.key);
+    const raw = text.trim();
+    this.chatError = "";
+    this.messages.push({ role: "user", text: raw, timestamp: Date.now() });
+
+    // --- Client-side commands ---
+    if (cmd?.local === "new") {
+      // Mirror Control UI semantics: /new on a dashboard session creates a
+      // fresh session and switches to it (never sends /new to the gateway,
+      // which would strand us on a stale sessionId).
+      try {
+        const agentId = this.activeKey.match(/^agent:([^:]+):/)?.[1] ?? "main";
+        await this.createSession({ agentId });
+        this.messages.push({ role: "assistant", text: "✅ New session started.", timestamp: Date.now() });
+        if (parsed.args) {
+          const res = await this.rpc("sessions.patch", { key: this.activeKey, model: parsed.args });
+          if (!res.ok) this.chatError = `model pin failed: ${res.error}`;
+          await this.refreshSessions();
+        }
+      } catch (err) {
+        this.chatError = err instanceof Error ? err.message : String(err);
+      }
+      return true;
+    }
+    if (cmd?.local === "stop") {
+      await this.abort();
+      this.messages.push({ role: "assistant", text: "⏹ Abort requested.", timestamp: Date.now() });
+      return true;
+    }
+    if (cmd?.local === "clear") {
+      this.messages = [];
+      this.draft = "";
+      return true;
+    }
+
+    // --- Gateway-executed commands ---
+    try {
+      const ack = await this.client.chatSend({
+        sessionKey: this.activeKey,
+        message: raw,
+        idempotencyKey: genIdem(),
+        sessionId: this.sessionId,
+      });
+      if (ack.runId) this.activeRunId = ack.runId;
+    } catch (err) {
+      this.chatError = err instanceof Error ? err.message : String(err);
+      this.messages.push({ role: "assistant", text: `⚠ command failed: ${this.chatError}`, timestamp: Date.now() });
+      return true;
+    }
+    if (cmd?.resetsTranscript) {
+      // /reset rotates the session server-side: drop the stale sessionId and
+      // reload once the gateway has finished (ack text streams in separately).
+      this.sessionId = undefined;
+      setTimeout(() => void this.loadHistory(), 1500);
+    }
+    // /model, /name, /fast etc. mutate session rows — refresh the index.
+    void this.refreshSessions();
+    return true;
   }
 
   async abort() {

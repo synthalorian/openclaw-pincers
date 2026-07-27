@@ -2,6 +2,7 @@
   import { app } from "$lib/state/app.svelte";
   import { tick } from "svelte";
   import type { ChatAttachment } from "$lib/gateway/protocol";
+  import { filterCommands, getCommand, type SlashCommand } from "$lib/commands";
 
   const MAX_IMAGE_BYTES = 6 * 1024 * 1024; // gateway MAX_IMAGE_BYTES
 
@@ -26,6 +27,49 @@
   let newLabel = $state("");
   let newBusy = $state(false);
   let newError = $state("");
+
+  // --- Slash commands ---
+  let slashIndex = $state(0);
+  let slashDismissed = $state(false);
+
+  /** The partial command token being typed, or null when the menu should stay closed. */
+  const slashToken = $derived.by(() => {
+    if (!app.slashCommands || slashDismissed) return null;
+    if (!composer.startsWith("/") || composer.includes("\n")) return null;
+    const m = composer.match(/^\/([a-zA-Z0-9_-]*)/);
+    return m ? m[1].toLowerCase() : null;
+  });
+
+  /** True once a full known command + space is typed — show its arg hint instead of the filter list. */
+  const slashArgHint = $derived.by(() => {
+    if (slashToken === null) return null;
+    const m = composer.match(/^\/([a-zA-Z0-9_-]+)\s/);
+    if (!m) return null;
+    const cmd = getCommand(m[1]);
+    return cmd?.args ? cmd : null;
+  });
+
+  const slashItems = $derived(slashToken === null || slashArgHint ? [] : filterCommands(slashToken).slice(0, 9));
+  const slashOpen = $derived(slashItems.length > 0 || slashArgHint !== null);
+
+  // Reset menu navigation whenever the composer text changes.
+  $effect(() => {
+    void composer;
+    slashIndex = 0;
+    slashDismissed = false;
+  });
+
+  function pickSlash(c: SlashCommand) {
+    slashDismissed = true;
+    if (!c.args) {
+      // No-arg command: run it immediately.
+      const text = `/${c.key}`;
+      composer = "";
+      void app.handleSlashCommand(text);
+    } else {
+      composer = `/${c.key} `;
+    }
+  }
 
   // Mobile: session pane as slide-over drawer
   let drawerOpen = $state(false);
@@ -201,6 +245,14 @@
   async function handleSend() {
     const text = composer;
     const imgs = pending;
+    // Slash commands: no attachments allowed, routed through the command handler.
+    // Falls back to a normal message when the text isn't command-shaped ("/", "// …").
+    if (app.slashCommands && !imgs.length && text.trim().startsWith("/")) {
+      if (await app.handleSlashCommand(text)) {
+        composer = "";
+        return;
+      }
+    }
     composer = "";
     pending = [];
     attachError = "";
@@ -216,6 +268,45 @@
   }
 
   function handleKeydown(e: KeyboardEvent) {
+    if (slashOpen && !slashArgHint) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        slashIndex = (slashIndex + 1) % slashItems.length;
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        slashIndex = (slashIndex - 1 + slashItems.length) % slashItems.length;
+        return;
+      }
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const item = slashItems[Math.min(slashIndex, slashItems.length - 1)];
+        if (item) pickSlash(item);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        slashDismissed = true;
+        return;
+      }
+      if (e.key === "Enter" && !e.shiftKey) {
+        const item = slashItems[Math.min(slashIndex, slashItems.length - 1)];
+        if (item) {
+          e.preventDefault();
+          if (composer.trim() === `/${item.key}`) {
+            // Exact command, no args (e.g. "/model") → run as-is; many
+            // commands have meaningful no-arg behavior (status/picker views).
+            composer = "";
+            void app.handleSlashCommand(`/${item.key}`);
+          } else {
+            // Partial token → complete the highlighted command first.
+            pickSlash(item);
+          }
+          return;
+        }
+      }
+    }
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       void handleSend();
@@ -375,6 +466,34 @@
       </div>
     {/if}
 
+    {#if slashOpen}
+      <div class="slash-menu" role="listbox" aria-label="Slash commands">
+        {#if slashArgHint}
+          <div class="slash-hint">
+            <span class="slash-key">/{slashArgHint.key}</span>
+            <span class="slash-args">{slashArgHint.args}</span>
+            <span class="slash-desc">{slashArgHint.description}</span>
+          </div>
+        {:else}
+          {#each slashItems as c, i (c.key)}
+            <button
+              class="slash-item"
+              class:sel={i === slashIndex}
+              role="option"
+              aria-selected={i === slashIndex}
+              onmouseenter={() => (slashIndex = i)}
+              onclick={() => pickSlash(c)}
+            >
+              <span class="slash-key">/{c.key}</span>
+              {#if c.args}<span class="slash-args">{c.args}</span>{/if}
+              <span class="slash-desc">{c.description}</span>
+              {#if c.local}<span class="slash-badge">instant</span>{/if}
+            </button>
+          {/each}
+        {/if}
+      </div>
+    {/if}
+
     <footer class="composer">
       <input
         bind:this={fileInput}
@@ -384,12 +503,22 @@
         class="hidden-input"
         onchange={(e) => { addFiles(e.currentTarget.files ?? []); e.currentTarget.value = ""; }}
       />
+      <button
+        class="slash-toggle"
+        class:on={app.slashCommands}
+        title={app.slashCommands
+          ? "Slash commands ON — type / for the menu (/new /stop /model …). Click to disable."
+          : "Slash commands OFF — / messages go to the model as plain text. Click to enable."}
+        onclick={() => app.setSlashCommands(!app.slashCommands)}
+      >/</button>
       <button class="attach" title="Attach images" onclick={() => fileInput?.click()}>📎</button>
       <textarea
         bind:value={composer}
         onkeydown={handleKeydown}
         onpaste={handlePaste}
-        placeholder="Message the agent… (Enter to send, paste or drop images)"
+        placeholder={app.slashCommands
+          ? "Message the agent… (Enter to send, / for commands)"
+          : "Message the agent… (Enter to send, paste or drop images)"}
         rows="2"
       ></textarea>
       {#if busy}
@@ -525,6 +654,39 @@
     border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--danger-text);
   }
   .composer { display: flex; gap: 10px; padding: 14px 16px; border-top: 1px solid var(--border); align-items: flex-end; }
+
+  /* ---------- Slash command menu ---------- */
+  .slash-menu {
+    margin: 0 16px; max-height: 320px; overflow-y: auto;
+    background: var(--bg-card); border: 1px solid var(--border2); border-radius: 10px;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.35);
+    display: flex; flex-direction: column; padding: 4px;
+  }
+  .slash-item {
+    display: flex; align-items: baseline; gap: 8px; width: 100%; text-align: left;
+    background: transparent; color: var(--text2); padding: 8px 10px; border-radius: 7px;
+    font-weight: 500; border: none; cursor: pointer; font-size: 13px;
+  }
+  .slash-item.sel { background: var(--bg-active); color: var(--text); box-shadow: inset 2px 0 0 var(--accent); }
+  .slash-key { color: var(--accent); font-weight: 700; font-family: monospace; white-space: nowrap; }
+  .slash-args { color: var(--muted); font-family: monospace; font-size: 11px; white-space: nowrap; }
+  .slash-desc { color: var(--text4); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .slash-badge {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--accent); background: var(--bg); border: 1px solid var(--border-input);
+    padding: 1px 5px; border-radius: 999px; flex-shrink: 0;
+  }
+  .slash-hint {
+    display: flex; align-items: baseline; gap: 8px; padding: 9px 10px;
+    font-size: 12.5px; color: var(--text3);
+  }
+  .slash-toggle {
+    background: var(--bg-active); border: 1px solid var(--border-input); border-radius: 8px;
+    padding: 10px 0; width: 38px; font-size: 15px; font-weight: 800; cursor: pointer;
+    color: var(--muted); font-family: monospace;
+  }
+  .slash-toggle.on { color: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 40%, transparent); }
+  .slash-toggle:hover { color: var(--accent); border-color: var(--accent); }
   .composer textarea {
     flex: 1; resize: none; font-family: inherit; background: var(--bg); border: 1px solid var(--border-input);
     border-radius: 8px; color: var(--text); padding: 10px 12px; font-size: 14px; outline: none;
