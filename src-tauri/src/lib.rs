@@ -131,6 +131,7 @@ fn local_gateway_auth() -> Result<Option<LocalGatewayAuth>, String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             device_identity,
             sign_device_payload,
