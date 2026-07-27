@@ -122,8 +122,13 @@ class AppState {
       }
     }
     if (event === "connection.closed") {
+      const wasConnected = this.hello !== null;
       this.hello = null;
       this.activeRunId = null;
+      // Auto-reconnect after unexpected drops (gateway restart, network blip)
+      if (wasConnected && !this.manualDisconnect && !this.pairing) {
+        this.scheduleReconnect();
+      }
     }
     if (event === "sessions.changed") {
       void this.refreshSessions();
@@ -135,6 +140,8 @@ class AppState {
     try {
       const hello = await this.client.connect(this.gatewayUrl.trim(), this.token.trim() || undefined);
       this.hello = hello;
+      this.manualDisconnect = false;
+      this.clearReconnect();
       this.stopPairingRetry();
       localStorage.setItem(LS_URL, this.gatewayUrl.trim());
       localStorage.setItem(LS_TOKEN, this.token.trim());
@@ -144,8 +151,11 @@ class AppState {
       this.startApprovalWatcher();
     } catch (err) {
       const e = err as { code?: string; message?: string; details?: unknown };
-      if (e?.code === "NOT_PAIRED") {
+      const msg = String(e?.message ?? "");
+      if (e?.code === "NOT_PAIRED" || msg.includes("pairing required")) {
         // Device pairing pending: surface it and auto-retry until approved.
+        // (New devices get rejected at WS-upgrade with close code 1008 + reason;
+        // scope upgrades come back as a JSON NOT_PAIRED — handle both.)
         const requestId = extractRequestId(e) ?? this.pairing?.requestId ?? "";
         this.pairing = { requestId, attempts: (this.pairing?.attempts ?? 0) + 1 };
         this.startPairingRetry();
@@ -192,7 +202,28 @@ class AppState {
     }
   }
 
+  /* ---------- Auto-reconnect ---------- */
+  private manualDisconnect = false;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private scheduleReconnect() {
+    if (this.reconnectTimer) return;
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      if (!this.manualDisconnect && this.status !== "connected") void this.connect();
+    }, 5000);
+  }
+
+  private clearReconnect() {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+  }
+
   disconnect() {
+    this.manualDisconnect = true;
+    this.clearReconnect();
     this.stopApprovalWatcher();
     this.client.close();
     this.hello = null;
