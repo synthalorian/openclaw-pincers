@@ -380,6 +380,15 @@
     return `${n} B`;
   }
 
+  /** Message timestamps: time-only for today, date + time for older. */
+  function fmtTime(ts?: number): string {
+    if (!ts) return "";
+    const d = new Date(ts < 1e12 ? ts * 1000 : ts); // tolerate seconds-or-ms epochs
+    const sameDay = d.toDateString() === new Date().toDateString();
+    const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    return sameDay ? time : `${d.toLocaleDateString([], { month: "short", day: "numeric" })} ${time}`;
+  }
+
   async function handleSend() {
     const text = composer;
     const imgs = pending;
@@ -573,6 +582,7 @@
         <div class="msg {m.role}">
           <div class="msg-role">
             {m.role === "user" ? "You" : "Assistant"}{m.aborted ? " (aborted)" : ""}
+            {#if m.timestamp}<span class="msg-time">{fmtTime(m.timestamp)}</span>{/if}
             {#if ttsSupported && m.role === "assistant" && m.text}
               <button class="msg-speak" onclick={() => speak(m.text)} title="Read aloud">🔊</button>
             {/if}
@@ -826,6 +836,7 @@
   .msg.user { align-self: flex-end; }
   .msg.assistant { align-self: flex-start; }
   .msg-role { font-size: 11px; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .msg-time { margin-left: 8px; text-transform: none; letter-spacing: 0; opacity: 0.75; }
   .msg-text { padding: 12px 14px; border-radius: 12px; white-space: pre-wrap; word-break: break-word; font-size: 14px; line-height: 1.55; }
   .msg.user .msg-text { background: var(--bubble-user); border-bottom-right-radius: 4px; }
   .msg.assistant .msg-text { background: var(--bg-msg); border: 1px solid var(--border2); border-bottom-left-radius: 4px; }
