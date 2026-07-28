@@ -363,16 +363,37 @@ function extractHistory(res: unknown): { messages: ChatMessage[]; sessionId?: st
     const role = String(o.role ?? o.type ?? "assistant") as ChatMessage["role"];
     if (role !== "user" && role !== "assistant") continue;
     const text = extractText(o);
-    if (!text) continue;
+    const imageMeta = extractImageMeta(o);
+    if (!text && !imageMeta.length) continue;
     messages.push({
       role,
-      text,
+      // The gateway sends bare "[image]" as the text of image-only user turns —
+      // suppress it when we have placeholder chips to show instead.
+      text: text === "[image]" && imageMeta.length ? "" : text,
       messageId: (o.messageId ?? o.id) as string | undefined,
       timestamp: (o.timestamp ?? o.ts) as number | undefined,
       aborted: Boolean(o.aborted),
+      ...(imageMeta.length ? { imageMeta } : {}),
     });
   }
   return { messages, sessionId };
+}
+
+/**
+ * chat.history strips image payloads server-side (privacy/bandwidth) but keeps
+ * { type: "image", omitted: true, bytes: N } blocks — surface them as
+ * placeholder chips instead of dropping the message.
+ */
+function extractImageMeta(o: Record<string, unknown>): { bytes?: number }[] {
+  if (!Array.isArray(o.content)) return [];
+  const out: { bytes?: number }[] = [];
+  for (const b of o.content as unknown[]) {
+    if (b && typeof b === "object" && (b as Record<string, unknown>).type === "image") {
+      const bytes = (b as Record<string, unknown>).bytes;
+      out.push({ bytes: typeof bytes === "number" ? bytes : undefined });
+    }
+  }
+  return out;
 }
 
 function extractText(o: Record<string, unknown>): string {

@@ -8,11 +8,17 @@
   const MAX_IMAGE_BYTES = 6 * 1024 * 1024; // gateway MAX_IMAGE_BYTES
 
   interface PendingImage {
+    id: string;
     name: string;
     mime: string;
     dataUrl: string;
     size: number;
   }
+
+  // Unique ids for pending chips — two images of the same type share an
+  // identical data: URL prefix, so keying the each-block by dataUrl made
+  // duplicate keys (and broke the ✕ remove button).
+  let pendingSeq = 0;
 
   let composer = $state("");
   let scrollBox = $state<HTMLElement | null>(null);
@@ -262,7 +268,13 @@
       }
       const reader = new FileReader();
       reader.onload = () => {
-        pending.push({ name: file.name, mime: file.type, dataUrl: String(reader.result), size: file.size });
+        pending.push({
+          id: `${Date.now()}-${pendingSeq++}`,
+          name: file.name,
+          mime: file.type,
+          dataUrl: String(reader.result),
+          size: file.size,
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -358,8 +370,14 @@
     if (files?.length) addFiles(files);
   }
 
-  function removePending(idx: number) {
-    pending.splice(idx, 1);
+  function removePending(id: string) {
+    pending = pending.filter((p) => p.id !== id);
+  }
+
+  function fmtBytes(n: number): string {
+    if (n >= 1048576) return `${(n / 1048576).toFixed(1)} MB`;
+    if (n >= 1024) return `${Math.round(n / 1024)} kB`;
+    return `${n} B`;
   }
 
   async function handleSend() {
@@ -568,6 +586,15 @@
               {/each}
             </div>
           {/if}
+          {#if m.imageMeta?.length}
+            <div class="msg-images">
+              {#each m.imageMeta as img, i (i)}
+                <span class="img-placeholder">
+                  🖼 image{img.bytes ? ` · ${fmtBytes(img.bytes)}` : ""}
+                </span>
+              {/each}
+            </div>
+          {/if}
           {#if m.text}<div class="msg-text">{m.text}</div>{/if}
         </div>
       {/each}
@@ -590,11 +617,11 @@
 
     {#if pending.length}
       <div class="pending-strip">
-        {#each pending as p, idx (p.dataUrl.slice(0, 64))}
+        {#each pending as p (p.id)}
           <div class="pending-chip">
             <img src={p.dataUrl} alt={p.name} />
             <span class="pending-name">{p.name}</span>
-            <button class="pending-x" onclick={() => removePending(idx)} title="remove">✕</button>
+            <button class="pending-x" onclick={() => removePending(p.id)} title="remove">✕</button>
           </div>
         {/each}
       </div>
@@ -878,6 +905,11 @@
   .msg-images { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
   .thumb-btn { background: none; border: none; padding: 0; cursor: zoom-in; }
   .thumb { max-width: 220px; max-height: 160px; border-radius: 8px; border: 1px solid var(--border2); }
+  .img-placeholder {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--bg-card); border: 1px dashed var(--border2); border-radius: 8px;
+    padding: 8px 12px; font-size: 12px; color: var(--text4); cursor: default;
+  }
 
   .lightbox {
     position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, 0.85);
