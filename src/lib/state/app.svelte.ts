@@ -130,6 +130,9 @@ class AppState {
         this.draft = "";
         this.activeRunId = null;
       }
+      // Run ended (final/aborted/error): pull fresh rows so the header context
+      // meter reflects the new token counts.
+      if (payload.state !== "delta") void this.refreshSessions();
     }
     if (event === "connection.closed") {
       const wasConnected = this.hello !== null;
