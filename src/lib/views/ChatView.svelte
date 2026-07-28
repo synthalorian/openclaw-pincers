@@ -137,6 +137,42 @@
     (app.sessions.find((s) => s.key === app.activeKey)?.model as string | undefined) ?? "",
   );
 
+  // --- Context usage meter ---
+  const activeRow = $derived(app.sessions.find((s) => s.key === app.activeKey));
+
+  function fmtTokens(n: number): string {
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+    return String(n);
+  }
+
+  const ctx = $derived.by(() => {
+    const r = activeRow;
+    if (!r) return null;
+    const used = Number(r.totalTokens ?? 0);
+    const window = Number(r.contextTokens ?? 0);
+    if (!used && !window) return null;
+    const pct = window > 0 ? Math.min(100, (used / window) * 100) : null;
+    const input = Number(r.inputTokens ?? 0);
+    const output = Number(r.outputTokens ?? 0);
+    const cost = Number(r.estimatedCostUsd ?? 0);
+    const parts = [
+      window > 0
+        ? `Context: ${used.toLocaleString()} / ${window.toLocaleString()} tokens (${pct!.toFixed(0)}%)`
+        : `Context: ${used.toLocaleString()} tokens (window size unknown)`,
+    ];
+    if (input || output)
+      parts.push(`Last run: in ${input.toLocaleString()} · out ${output.toLocaleString()}`);
+    if (cost > 0) parts.push(`Est. session cost: $${cost.toFixed(4)}`);
+    parts.push("Click to refresh");
+    return {
+      pct,
+      label: window > 0 ? `${fmtTokens(used)}/${fmtTokens(window)}` : `${fmtTokens(used)} tok`,
+      title: parts.join("\n"),
+      tone: pct === null ? "" : pct >= 85 ? "danger" : pct >= 60 ? "warn" : "",
+    };
+  });
+
   $effect(() => {
     if (app.status === "connected" && !modelsLoaded) {
       modelsLoaded = true;
@@ -471,6 +507,18 @@
       <button class="drawer-btn" aria-label="open sessions" onclick={() => (drawerOpen = true)}>☰</button>
       <h2>{sessionLabel(app.activeKey)}</h2>
       <code>{app.activeKey}</code>
+      {#if ctx}
+        <button
+          class="ctx-meter {ctx.tone}"
+          title={ctx.title}
+          onclick={() => app.refreshSessions()}
+        >
+          {#if ctx.pct !== null}
+            <span class="ctx-bar"><span class="ctx-fill" style:width="{ctx.pct}%"></span></span>
+          {/if}
+          <span class="ctx-label">{ctx.label}</span>
+        </button>
+      {/if}
       <select
         class="model-picker"
         title="Session model (sessions.patch)"
@@ -685,6 +733,29 @@
   }
   .model-picker:focus { border-color: var(--accent); }
   .model-err { color: var(--warning, #ffcf6e); font-size: 13px; }
+
+  /* ---------- Context usage meter ---------- */
+  .ctx-meter {
+    display: flex; align-items: center; gap: 7px; align-self: center;
+    background: var(--bg); border: 1px solid var(--border-input); border-radius: 8px;
+    padding: 5px 9px; cursor: pointer; color: var(--text3);
+  }
+  .ctx-meter:hover { border-color: var(--accent); }
+  .ctx-bar {
+    width: 56px; height: 6px; border-radius: 999px; overflow: hidden;
+    background: var(--bg-active); flex-shrink: 0;
+  }
+  .ctx-fill {
+    display: block; height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.35s ease;
+  }
+  .ctx-label { font-size: 11px; font-family: monospace; white-space: nowrap; }
+  .ctx-meter.warn .ctx-fill { background: var(--warning, #ffcf6e); }
+  .ctx-meter.warn .ctx-label { color: var(--warning, #ffcf6e); }
+  .ctx-meter.danger { border-color: var(--danger); }
+  .ctx-meter.danger .ctx-fill { background: var(--danger); }
+  .ctx-meter.danger .ctx-label { color: var(--danger-text); }
   .voice-btn { background: transparent; border: 1px solid var(--border-input); border-radius: 8px; padding: 4px 8px; font-size: 13px; cursor: pointer; }
   .voice-btn.voice-on { border-color: var(--accent); box-shadow: 0 0 8px var(--accent); }
   .msg-speak { background: none; border: none; font-size: 11px; cursor: pointer; opacity: 0.55; padding: 0 4px; }
