@@ -137,6 +137,8 @@ export interface ChatMessage {
   aborted?: boolean;
   /** Local-only echo of attached images (data URLs), not from history. */
   images?: string[];
+  /** History image blocks: payload omitted server-side, only size survives. */
+  imageMeta?: { bytes?: number }[];
 }
 
 // ---------- Sessions ----------
