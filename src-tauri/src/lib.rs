@@ -129,6 +129,18 @@ fn local_gateway_auth() -> Result<Option<LocalGatewayAuth>, String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Workaround: WebKitGTK 2.52+ uses DMA-BUF rendering which produces a
+    // blank webview on NVIDIA proprietary drivers. Disable it so the
+    // compositor falls back to shared-memory rendering. Safe on AMD/Intel
+    // (they don't hit this path). Can be overridden by setting the var
+    // externally before launching.
+    #[cfg(target_os = "linux")]
+    {
+        if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+            unsafe { std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1") };
+        }
+    }
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
