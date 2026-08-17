@@ -231,3 +231,11 @@ MIT — see [LICENSE](LICENSE).
 <div align="center">
   <sub>Built with claws by <a href="https://github.com/synthalorian">synth</a> &amp; synthclaw 🎹🦞 · This is the wave.</sub>
 </div>
+
+---
+
+## ☕ Support the Developer
+
+If this project saved you time, solved a problem, or just made your day a little more neon, you can fuel the next one:
+
+[![Buy Me A Coffee](https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png)](https://buymeacoffee.com/synthalorian)
