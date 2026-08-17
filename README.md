@@ -229,7 +229,7 @@ MIT — see [LICENSE](LICENSE).
 ---
 
 <div align="center">
-  <sub>Built with claws by <a href="https://github.com/synthalorian">synthalorian 🎹🤺</a> &amp; synthclaw 🎹🦞 · This is the wave.</sub>
+  <sub>Built with claws by <a href="https://github.com/synthalorian">synth 🎹🤺</a> &amp; synthclaw 🎹🦞 · This is the wave.</sub>
 </div>
 
 ---
