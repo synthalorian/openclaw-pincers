@@ -67,7 +67,7 @@ class AppState {
   private pairingTimer: ReturnType<typeof setInterval> | null = null;
   section = $state<Section>("chat");
   agents = $state<AgentRow[]>([]);
-  themeId = $state(localStorage.getItem(LS_THEME) ?? "grid");
+  themeId = $state(localStorage.getItem(LS_THEME) ?? "blackshield");
 
   get theme(): ThemeDef {
     return THEMES.find((t) => t.id === this.themeId) ?? THEMES[0];
