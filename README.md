@@ -13,7 +13,7 @@ with claws. Now on Android too.
 
 ![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows%20%7C%20Android-blue)
 ![Stack](https://img.shields.io/badge/stack-Tauri%202%20%C2%B7%20Svelte%205%20%C2%B7%20TypeScript%20%C2%B7%20Rust-orange)
-![License](https://img.shields.io/badge/license-MIT-green)
+![License](https://img.shields.io/badge/license-Apache_2.0-blue)
 ![Protocol](https://img.shields.io/badge/gateway%20protocol-v4-purple)
 
 </div>
@@ -224,7 +224,7 @@ fallbacks are bug reports gold.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+Apache-2.0 — see [LICENSE](LICENSE).
 
 ---
 
