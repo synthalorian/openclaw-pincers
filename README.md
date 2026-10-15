@@ -1,3 +1,5 @@
+![openclaw-pincers](.github/preview.png)
+
 <div align="center">
 
 <img src="assets/openclawpincers.png" alt="OpenClaw Pincers" width="256" />
